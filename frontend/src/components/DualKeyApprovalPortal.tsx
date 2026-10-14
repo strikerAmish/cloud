@@ -1,0 +1,264 @@
+import React, { useState } from 'react';
+import {
+  KeyRound,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Zap,
+  Shield,
+  FileSignature,
+  Lock,
+  Clock,
+  Terminal
+} from 'lucide-react';
+import { OperationalEvent, ApprovalRole, Department } from '../types';
+import { submitApproval } from '../api';
+
+interface DualKeyApprovalPortalProps {
+  event: OperationalEvent | null;
+  onRefresh: () => void;
+}
+
+export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ event, onRefresh }) => {
+  const [loadingRole, setLoadingRole] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  if (!event) {
+    return (
+      <div className="p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl">
+        No event selected for Dual-Key Approval.
+      </div>
+    );
+  }
+
+  const handleSign = async (role: ApprovalRole, dept: Department, officerId: string) => {
+    setLoadingRole(role);
+    setErrorMsg(null);
+    try {
+      await submitApproval(event.id, dept, role, officerId, 'APPROVED');
+      onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Approval sign-off failed');
+    } finally {
+      setLoadingRole(null);
+    }
+  };
+
+  const getStakeholder = (role: ApprovalRole) => {
+    return event.stakeholders.find((s) => s.role === role);
+  };
+
+  const tpcStakeholder = getStakeholder('TPC' as ApprovalRole);
+  const ctrlStakeholder = getStakeholder('SECTION_CONTROLLER' as ApprovalRole);
+  const smStakeholder = getStakeholder('STATION_MASTER' as ApprovalRole);
+  const sseStakeholder = getStakeholder('FIELD_SUPERVISOR' as ApprovalRole);
+
+  const dualKeyCleared = tpcStakeholder?.approval_status === 'APPROVED' && ctrlStakeholder?.approval_status === 'APPROVED';
+
+  return (
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono font-bold bg-cyan-950 text-cyan-400 px-2.5 py-0.5 rounded border border-cyan-500/40">
+              SCREEN 4 • DUAL-KEY MULTI-PARTY APPROVAL PORTAL
+            </span>
+            <span className="text-xs font-mono text-slate-400">Event: {event.id.substring(0, 8)}...</span>
+          </div>
+          <h2 className="text-lg font-bold text-white">
+            Synthesized Human-in-the-Loop Decision Boundary (G&SR & ACTM Compliance)
+          </h2>
+          <p className="text-xs text-slate-400">
+            RailSync orchestrates workflow communication; statutory authority rests strictly with certified human officers.
+          </p>
+        </div>
+
+        {/* Dual-Key Status Badge */}
+        <div className={`px-4 py-2 rounded-xl border font-mono text-xs font-bold flex items-center gap-2 ${
+          dualKeyCleared
+            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300'
+            : 'bg-amber-950/80 border-amber-500 text-amber-300'
+        }`}>
+          <KeyRound className="w-4 h-4" />
+          <span>{dualKeyCleared ? 'DUAL-KEY QUORUM MET (APPROVED)' : 'DUAL-KEY PENDING SIGN-OFF'}</span>
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="p-3 rounded-lg bg-red-950/80 border border-red-500 text-xs text-red-200">
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Role Decision Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Card 1: Traction Power Controller (TPC) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-amber-400" />
+                KEY 1 • TRACTION POWER CONTROLLER (TPC)
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                tpcStakeholder?.approval_status === 'APPROVED'
+                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
+                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+              }`}>
+                {tpcStakeholder?.approval_status || 'PENDING'}
+              </span>
+            </div>
+
+            <h3 className="font-bold text-sm text-white mb-1">Form ETR-1 Power Block Message</h3>
+            <p className="text-xs text-slate-400 mb-3">
+              Authorizes 25kV Catenary de-energization from Feeding Post FP-04 to FP-06. Confirms electrical isolation zone.
+            </p>
+
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
+              <div>• Officer ID: <span className="text-cyan-400">{tpcStakeholder?.officer_id || 'TPC_NGP_01'}</span></div>
+              <div>• Statutory Rule: ACTM Vol. II Section 20615</div>
+              <div>• Sub-Station: Wardha Traction Sub-Station (TSS)</div>
+              {tpcStakeholder?.signature_hash && (
+                <div className="text-[10px] text-emerald-400 truncate">
+                  • Sig: {tpcStakeholder.signature_hash}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleSign('TPC' as ApprovalRole, 'OHE' as Department, 'TPC_NGP_01')}
+            disabled={loadingRole === 'TPC' || tpcStakeholder?.approval_status === 'APPROVED'}
+            className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <FileSignature className="w-4 h-4" />
+            {tpcStakeholder?.approval_status === 'APPROVED' ? 'Signed (Form ETR-1 Issued)' : 'Sign TPC ETR-1 Power Block'}
+          </button>
+        </div>
+
+        {/* Card 2: Operating Section Controller */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-blue-400" />
+                KEY 2 • SECTION CONTROLLER (OPERATING)
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                ctrlStakeholder?.approval_status === 'APPROVED'
+                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
+                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+              }`}>
+                {ctrlStakeholder?.approval_status || 'PENDING'}
+              </span>
+            </div>
+
+            <h3 className="font-bold text-sm text-white mb-1">Traffic Block Feasibility Grant</h3>
+            <p className="text-xs text-slate-400 mb-3">
+              Evaluates live train charts in COA, timetables, and passenger rake regulation per G&SR Chapter IV.
+            </p>
+
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
+              <div>• Officer ID: <span className="text-cyan-400">{ctrlStakeholder?.officer_id || 'CTRL_SEC_WDA_02'}</span></div>
+              <div>• Statutory Rule: G&SR Chapter IV (Line Block Grant)</div>
+              <div>• Corridor: Wardha-Sevagram UP MAIN</div>
+              {ctrlStakeholder?.signature_hash && (
+                <div className="text-[10px] text-emerald-400 truncate">
+                  • Sig: {ctrlStakeholder.signature_hash}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleSign('SECTION_CONTROLLER' as ApprovalRole, 'OPERATING' as Department, 'CTRL_SEC_WDA_02')}
+            disabled={loadingRole === 'SECTION_CONTROLLER' || ctrlStakeholder?.approval_status === 'APPROVED'}
+            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <FileSignature className="w-4 h-4" />
+            {ctrlStakeholder?.approval_status === 'APPROVED' ? 'Signed (Traffic Block Granted)' : 'Sign Section Controller Traffic Block'}
+          </button>
+        </div>
+
+        {/* Card 3: Station Master (Interlocking & Clamping) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-mono font-bold text-cyan-400 flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-cyan-400" />
+                STATION MASTER INTERLOCKING & POINT CLAMPING
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                smStakeholder?.approval_status === 'APPROVED'
+                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
+                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+              }`}>
+                {smStakeholder?.approval_status || 'PENDING'}
+              </span>
+            </div>
+
+            <h3 className="font-bold text-sm text-white mb-1">Physical Point Clamping & Padlocking</h3>
+            <p className="text-xs text-slate-400 mb-3">
+              Verifies electronic route interlocking locked against target track. Confirms physical clamps on points #14A/B.
+            </p>
+
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
+              <div>• Officer ID: <span className="text-cyan-400">{smStakeholder?.officer_id || 'SM_WDA_JCT'}</span></div>
+              <div>• Cabin: Wardha North Cabin (RRI)</div>
+              <div>• Interlocking State: CLAMPED & PADLOCKED</div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleSign('STATION_MASTER' as ApprovalRole, 'OPERATING' as Department, 'SM_WDA_JCT')}
+            disabled={loadingRole === 'STATION_MASTER' || smStakeholder?.approval_status === 'APPROVED'}
+            className="w-full py-2.5 px-4 bg-cyan-700 hover:bg-cyan-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Lock className="w-4 h-4" />
+            {smStakeholder?.approval_status === 'APPROVED' ? 'Points Clamped & Verified' : 'Confirm SM Point Clamping'}
+          </button>
+        </div>
+
+        {/* Card 4: Field Supervisor (SSE OHE / P-Way) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-mono font-bold text-purple-400 flex items-center gap-1.5">
+                <FileSignature className="w-4 h-4 text-purple-400" />
+                FIELD SUPERVISOR PERMIT-TO-WORK (ETR-3)
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                sseStakeholder?.approval_status === 'APPROVED'
+                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
+                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+              }`}>
+                {sseStakeholder?.approval_status || 'PENDING'}
+              </span>
+            </div>
+
+            <h3 className="font-bold text-sm text-white mb-1">Field Earthing Discharge Rods</h3>
+            <p className="text-xs text-slate-400 mb-3">
+              Field crew attaches physical earth discharge rods to 25kV catenary. Assumes statutory site custody.
+            </p>
+
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
+              <div>• Officer ID: <span className="text-cyan-400">{sseStakeholder?.officer_id || 'SSE_OHE_WDA_04'}</span></div>
+              <div>• Form Code: ACTM ETR-3 (Permit-to-Work)</div>
+              <div>• Rods Applied: 2 Rods (Upstream & Downstream)</div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleSign('FIELD_SUPERVISOR' as ApprovalRole, 'OHE' as Department, 'SSE_OHE_WDA_04')}
+            disabled={loadingRole === 'FIELD_SUPERVISOR' || sseStakeholder?.approval_status === 'APPROVED'}
+            className="w-full py-2.5 px-4 bg-purple-700 hover:bg-purple-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {sseStakeholder?.approval_status === 'APPROVED' ? 'Permit ETR-3 Active' : 'Issue Field Permit ETR-3'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
