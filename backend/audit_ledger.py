@@ -7,7 +7,7 @@ SHA-256 hash chains, Merkle DAG structures, and multi-party consortium signature
 import hashlib
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
 
@@ -28,7 +28,7 @@ class AuditBlock:
         self.block_number = block_number
         self.event_id = event_id
         self.prev_hash = prev_hash
-        self.timestamp = timestamp or datetime.utcnow().isoformat() + "Z"
+        self.timestamp = timestamp or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         self.leaves = leaves
         self.multi_signatures = multi_signatures
         self.merkle_root = self._compute_merkle_root([leaf["hash"] for leaf in leaves])
@@ -143,7 +143,7 @@ class S3AuditLedger:
                 "role": s.get("role", "OFFICER"),
                 "officer_id": s.get("officer_id", "AUTH_OFFICER"),
                 "signature_hash": s.get("signature_hash") or compute_sha256(f"{s.get('officer_id')}:{event_id}")[:32],
-                "signed_at": s.get("signed_at", datetime.utcnow().isoformat())
+                "signed_at": s.get("signed_at", datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
             })
 
         new_block = AuditBlock(

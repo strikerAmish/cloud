@@ -7,7 +7,7 @@ Seeds initial railway corridor and operational events.
 import sqlite3
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -115,9 +115,9 @@ def init_db():
 
 def seed_baseline_event(cursor):
     sample_id = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
-    now = datetime.utcnow()
-    req_start = (now + timedelta(hours=1)).isoformat() + "Z"
-    req_end = (now + timedelta(hours=4)).isoformat() + "Z"
+    now = datetime.now(timezone.utc)
+    req_start = (now + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    req_end = (now + timedelta(hours=4)).isoformat().replace("+00:00", "Z")
 
     impact_vector = {
         "catenary_25kv_power_trip": True,
@@ -148,15 +148,15 @@ def seed_baseline_event(cursor):
         json.dumps(impact_vector),
         "OHE Catenary Inspection & Contact Wire Replacement (ACTM Vol II Sec 20615)",
         "SSE_OHE_WDA_04",
-        now.isoformat() + "Z",
-        now.isoformat() + "Z"
+        now.isoformat().replace("+00:00", "Z"),
+        now.isoformat().replace("+00:00", "Z")
     ))
 
     # Seed Stakeholders
     stakeholders = [
-        (str(uuid.uuid4()), sample_id, "OHE", "TPC", "TPC_NGP_01", "APPROVED", "8f3ca9b12a4d81e997ed25519tpcngp01", now.isoformat() + "Z", None),
+        (str(uuid.uuid4()), sample_id, "OHE", "TPC", "TPC_NGP_01", "APPROVED", "8f3ca9b12a4d81e997ed25519tpcngp01", now.isoformat().replace("+00:00", "Z"), None),
         (str(uuid.uuid4()), sample_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "PENDING", None, None, None),
-        (str(uuid.uuid4()), sample_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "b12a4d81e997ed25519smwardha01", now.isoformat() + "Z", None),
+        (str(uuid.uuid4()), sample_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "b12a4d81e997ed25519smwardha01", now.isoformat().replace("+00:00", "Z"), None),
         (str(uuid.uuid4()), sample_id, "OHE", "FIELD_SUPERVISOR", "SSE_OHE_WDA_04", "PENDING", None, None, None)
     ]
     cursor.executemany("""
@@ -177,7 +177,7 @@ def seed_baseline_event(cursor):
         0,
         1,
         1,
-        now.isoformat() + "Z",
+        now.isoformat().replace("+00:00", "Z"),
         "TPC_NGP_01",
         "25kV Catenary Power Block Granted from Feeding Post FP-04 to FP-06"
     ))

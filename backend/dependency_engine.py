@@ -5,6 +5,7 @@ DependencyGraph = f(EventType, GeoLocation, ImpactVector, Department, GSR_Rulese
 Resolves the Six Invariants of Operational Awareness.
 """
 
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from models import Department, ApprovalRole, Stakeholder, ApprovalStatus
 
@@ -101,7 +102,7 @@ class DynamicDependencyEngine:
             "invariant_4_passive_monitoring": passive_monitors,
             "invariant_5_site_custody": site_custody,
             "invariant_6_sla_escalation": escalation_chain,
-            "resolved_at_iso": "2026-10-14T23:05:00Z",
+            "resolved_at_iso": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "conflict_free": True
         }
 

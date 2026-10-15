@@ -4,7 +4,7 @@ Covers the OperationalEvent Aggregate Root, Stakeholders, Statutory Permits,
 FSM Enums, and Request/Response Payloads.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
@@ -93,7 +93,7 @@ class StatutoryPermit(BaseModel):
     earthing_discharged: bool = False
     power_tripped: bool = False
     points_clamped: bool = False
-    issued_at: datetime = Field(default_factory=datetime.utcnow)
+    issued_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     officer_id: str
     notes: Optional[str] = None
 

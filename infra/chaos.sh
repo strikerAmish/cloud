@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -e
+# RailSync Chaos Engineering & Empirical TTR Benchmark
+# Note: intentionally NOT using set -e because the outage detection loop
+# expects curl to fail (non-200) and we handle that explicitly.
 
 TARGET_HOST=${1:-"http://localhost:8000"}
 CLUSTER_NAME="railsync-cluster"

@@ -1,0 +1,27 @@
+# Secrets
+.env
+
+# SQLite local dev DB (use PostgreSQL in Docker / production)
+backend/railsync.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Terraform state & secrets
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfvars
+infra/.terraform.lock.hcl
+
+# OS
+.DS_Store
+Thumbs.db

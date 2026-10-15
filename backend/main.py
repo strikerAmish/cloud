@@ -9,7 +9,7 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect, Header
@@ -118,7 +118,7 @@ async def observability_and_resilience_middleware(request: Request, call_next):
 
     # Structured JSON Log
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "traceparent": traceparent,
         "method": request.method,
         "path": request.url.path,
@@ -157,7 +157,7 @@ def synthetic_canary_health_probe():
 
     return CanaryHealthResponse(
         status="HEALTHY",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         database="POSTGRESQL_15_ACID_READY",
         redis_mesh="ELASTICACHE_REDIS_7_ONLINE",
         active_events=event_count,
@@ -178,7 +178,7 @@ async def trigger_chaos_failure(duration_seconds: int = 5):
 
     await ws_manager.broadcast({
         "type": "CHAOS_FAILURE_INJECTED",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "duration_seconds": duration_seconds,
         "message": f"SIGKILL injected into backend container. Simulating ALB failover and task replacement ({duration_seconds}s)."
     })
@@ -199,9 +199,18 @@ def list_operational_events(status: Optional[str] = None, department: Optional[s
 
     query = "SELECT * FROM operational_events"
     params = []
+    conditions = []
     if status:
-        query += " WHERE status = ?"
+        conditions.append("status = ?")
         params.append(status)
+    if department:
+        # filter by originator department via stakeholders sub-query
+        conditions.append(
+            "id IN (SELECT event_id FROM event_stakeholders WHERE department = ?)"
+        )
+        params.append(department)
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
     query += " ORDER BY created_at DESC"
 
     cur.execute(query, params)
@@ -254,7 +263,7 @@ async def create_operational_event(payload: OperationalEventCreate, request: Req
     Runs Pydantic validation, resolves 6 Invariants, and commits Transactional Outbox.
     """
     event_id = str(uuid.uuid4())
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # Automatically resolve 6 Invariants via Dynamic Dependency Engine
     invariants = DynamicDependencyEngine.resolve_invariants(
@@ -432,7 +441,7 @@ async def acquire_fencing_token(event_id: str):
         raise HTTPException(status_code=409, detail=conflict)
 
     # Persist fencing token in PostgreSQL database with Storage Guard check
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     cur.execute("""
     UPDATE operational_events
     SET fencing_token = ?, status = ?, updated_at = ?
@@ -474,7 +483,7 @@ async def submit_dual_key_approval(event_id: str, payload: ApprovalRequest):
         conn.close()
         raise HTTPException(status_code=404, detail="Event not found")
 
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     sig_hash = compute_sha256(f"{payload.officer_id}:{payload.role.value}:{event_id}:{now}")
 
     # Update or insert stakeholder sign-off
@@ -558,7 +567,7 @@ async def activate_work_in_progress(event_id: str):
         conn.close()
         raise HTTPException(status_code=404, detail="Event not found")
 
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     cur.execute("UPDATE operational_events SET status = ?, updated_at = ? WHERE id = ?",
                 (EventStatus.ACTIVE_IN_PROGRESS.value, now, event_id))
     conn.commit()
@@ -585,7 +594,7 @@ async def submit_work_completion(event_id: str, payload: WorkCompletionRequest):
         conn.close()
         raise HTTPException(status_code=404, detail="Event not found")
 
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     cur.execute("""
     INSERT INTO statutory_permits (id, event_id, permit_type, earthing_discharged, issued_at, officer_id, notes)
     VALUES (?, ?, 'RECONNECTION_MEMO', 0, ?, ?, ?)
@@ -624,7 +633,7 @@ async def clear_operational_block(event_id: str):
     cur.execute("SELECT * FROM statutory_permits WHERE event_id = ?", (event_id,))
     permits = [dict(p) for p in cur.fetchall()]
 
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # 1. Release Distributed Fencing Token
     lock_manager.release_track_lock(event_id)
@@ -666,7 +675,7 @@ async def emergency_safety_abort(event_id: str, payload: EmergencyAbortRequest):
     """Triggers emergency safety interrupt and transitions FSM to ABORTED_SAFETY_LOCK state."""
     conn = get_db_connection()
     cur = conn.cursor()
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     lock_manager.release_track_lock(event_id)
 
@@ -697,7 +706,7 @@ async def escalate_sla_breach(event_id: str, reason: str = "TPC response exceede
     """Triggers SLA breach escalation to DOM / DRM authorities."""
     conn = get_db_connection()
     cur = conn.cursor()
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     cur.execute("UPDATE operational_events SET status = ?, updated_at = ? WHERE id = ?",
                 (EventStatus.ESCALATED_SLA.value, now, event_id))
@@ -769,7 +778,7 @@ async def websocket_corridor_stream(websocket: WebSocket):
             "type": "INITIAL_SNAPSHOT",
             "corridor": "Nagpur - Wardha - Sevagram",
             "active_locks": len(lock_manager.list_all_active_locks()),
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         }))
         while True:
             # Keep-alive ping/pong
@@ -778,9 +787,10 @@ async def websocket_corridor_stream(websocket: WebSocket):
             await websocket.send_text(json.dumps({
                 "type": "HEARTBEAT_ACK",
                 "received": data,
-                "server_time": datetime.utcnow().isoformat() + "Z"
+                "server_time": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             }))
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
-    except Exception:
+    except Exception as exc:
+        logger.warning(json.dumps({"event": "ws_unexpected_error", "error": str(exc)}))
         ws_manager.disconnect(websocket)
