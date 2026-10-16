@@ -3,14 +3,14 @@
 
 @layer base {
   :root {
-    --bg-canvas: #020509;
-    --bg-sidebar: #060a12;
-    --bg-card: #0c1120;
-    --bg-card-hover: #111827;
-    --border-subtle: #1a2236;
-    --border-active: #22304a;
-    --cyan-glow: rgba(6, 182, 212, 0.15);
-    --red-glow: rgba(239, 68, 68, 0.12);
+    --bg-canvas: #0e1117;
+    --bg-sidebar: #12161f;
+    --bg-card: #151b27;
+    --bg-card-hover: #1c2436;
+    --border-subtle: #1e2638;
+    --border-active: #2b3954;
+    --blue-glow: rgba(59, 130, 246, 0.15);
+    --green-glow: rgba(16, 185, 129, 0.15);
   }
 
   * {
@@ -41,13 +41,13 @@
 /* ─── Scrollbars ─────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1e2d45; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #2d4263; }
+::-webkit-scrollbar-thumb { background: #1e2638; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2b3954; }
 
 /* ─── Animations ─────────────────────────────────── */
 @keyframes pulseGlow {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.5)); }
-  50%       { opacity: 0.7; filter: drop-shadow(0 0 2px rgba(6, 182, 212, 0.15)); }
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5)); }
+  50%       { opacity: 0.7; filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.15)); }
 }
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
@@ -70,28 +70,47 @@
   100% { transform: translateY(400%); }
 }
 
-.glow-cyan     { animation: pulseGlow 2.4s infinite ease-in-out; }
+.glow-blue      { animation: pulseGlow 2.4s infinite ease-in-out; }
 .slide-in-right { animation: slideInRight 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .slide-in-up    { animation: slideInUp 0.2s ease both; }
 .fade-in        { animation: fadeIn 0.18s ease both; }
 
 /* Shimmer loading skeleton */
 .skeleton {
-  background: linear-gradient(90deg, #111827 25%, #1e2d45 50%, #111827 75%);
+  background: linear-gradient(90deg, #12161f 25%, #1e2638 50%, #12161f 75%);
   background-size: 200% auto;
   animation: shimmer 1.5s infinite linear;
 }
 
-/* ─── Status dot variants ───────────────────────── */
-.status-dot-green  { background: #10b981; box-shadow: 0 0 6px #10b981; }
-.status-dot-amber  { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
-.status-dot-red    { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-.status-dot-cyan   { background: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
-.status-dot-purple { background: #a855f7; box-shadow: 0 0 6px #a855f7; }
+/* ─── Neomorphic Depth (Blue, White, Green + Grey) ─── */
+.neo-card {
+  background: #12161f;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.neo-pressed {
+  background: #0e1117;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.neo-button {
+  background: #151b28;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.35), -2px -2px 5px rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+}
+.neo-button:active {
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Status dot variants (Strict Blue / Green / Grey) ─ */
+.status-dot-green { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.status-dot-blue  { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+.status-dot-grey  { background: #64748b; box-shadow: 0 0 4px #64748b; }
 
 /* ─── Kanban track ──────────────────────────────── */
 .kanban-scroll::-webkit-scrollbar { height: 6px; }
-.kanban-scroll::-webkit-scrollbar-thumb { background: #1e2d45; border-radius: 4px; }
+.kanban-scroll::-webkit-scrollbar-thumb { background: #1e2638; border-radius: 4px; }
 
 /* ─── Track visualizer scan line ────────────────── */
 .track-scan::after {
@@ -101,7 +120,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(6,182,212,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
   animation: scan 3s infinite linear;
 }
 
@@ -114,8 +133,8 @@
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: #0c1120;
-  border: 1px solid #1a2236;
+  background: #12161f;
+  border: 1px solid #1e2638;
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 11px;

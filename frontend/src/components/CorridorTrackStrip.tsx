@@ -38,14 +38,14 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
 
   return (
     <div
-      className={`shrink-0 border-b border-slate-800/80 bg-[#040812] transition-all duration-300 overflow-hidden ${
+      className={`shrink-0 border-b border-slate-800/80 bg-[#0e1117] transition-all duration-300 overflow-hidden ${
         collapsed ? 'h-10' : 'h-48'
       }`}
     >
       {/* ── Visualizer Header Bar ─────────────────── */}
-      <div className="h-9 flex items-center justify-between px-5 border-b border-slate-800/60 bg-[#060a16]">
+      <div className="h-9 flex items-center justify-between px-5 border-b border-slate-800/60 bg-[#12161f]">
         <div className="flex items-center gap-3">
-          <Activity className="w-3.5 h-3.5 text-cyan-400" />
+          <Activity className="w-3.5 h-3.5 text-blue-400" />
           <span className="text-xs font-semibold text-slate-200">
             Wardha ⇄ Sevagram Corridor Visualizer
           </span>
@@ -54,17 +54,17 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
           </span>
           {!collapsed && (
             <div className="flex items-center gap-3 ml-4 text-[10px] font-mono">
-              <span className="flex items-center gap-1.5 text-slate-400">
+              <span className="flex items-center gap-1.5 text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" /> Normal
               </span>
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <span className="w-2 h-2 rounded-full bg-amber-500" /> TSR 30 km/h
+              <span className="flex items-center gap-1.5 text-blue-400">
+                <span className="w-2 h-2 rounded-full bg-blue-500" /> TSR 30 km/h
               </span>
-              <span className="flex items-center gap-1.5 text-red-400">
-                <span className="w-2 h-2 rounded-full bg-red-500" /> Active Block
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" /> Active Block
               </span>
-              <span className="flex items-center gap-1.5 text-purple-400">
-                <span className="w-2 h-2 rounded-full bg-purple-500" /> Token Locked
+              <span className="flex items-center gap-1.5 text-blue-300">
+                <span className="w-2 h-2 rounded-full bg-blue-400" /> Token Locked
               </span>
             </div>
           )}
@@ -82,21 +82,21 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
       {!collapsed && (
         <div className="px-5 py-2.5 h-[152px] flex flex-col justify-between relative select-none">
           {/* Station Markers (Top Axis) */}
-          <div className="flex justify-between items-center text-[10px] font-mono border-b border-slate-800/40 pb-1">
+          <div className="flex justify-between items-center text-[10px] font-mono border-b border-slate-800/60 pb-1">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-sm bg-cyan-500 inline-block" />
-              <span className="font-bold text-cyan-300">WARDHA JN (WR)</span>
+              <span className="w-2 h-2 rounded-sm bg-blue-500 inline-block" />
+              <span className="font-bold text-blue-300">WARDHA JN (WR)</span>
               <span className="text-slate-500">KM 140.000</span>
             </div>
-            <div className="flex items-center gap-4 text-slate-500">
+            <div className="flex items-center gap-4 text-slate-400">
               <span>LC-64 North (KM 142.100)</span>
               <span>•</span>
               <span>Crossover #14A/B (KM 143.040)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-slate-500">KM 148.000</span>
-              <span className="font-bold text-cyan-300">SEVAGRAM JN (SEGM)</span>
-              <span className="w-2 h-2 rounded-sm bg-cyan-500 inline-block" />
+              <span className="font-bold text-blue-300">SEVAGRAM JN (SEGM)</span>
+              <span className="w-2 h-2 rounded-sm bg-blue-500 inline-block" />
             </div>
           </div>
 
@@ -109,43 +109,37 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
             >
               {/* Leader Line & Callout Badge Container */}
               <div className="relative flex flex-col items-center">
-                {/* Pill */}
-                <div
-                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold shadow-lg backdrop-blur-xs transition-transform group-hover:scale-105 ${
-                    hasToken
-                      ? 'bg-purple-950/90 border border-purple-500 text-purple-200'
-                      : 'bg-red-950/90 border border-red-500 text-red-200'
-                  }`}
-                >
-                  <Lock className="w-2.5 h-2.5 text-purple-400 shrink-0" />
+                {/* Pill in Sleek Blue Theme */}
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-semibold shadow-lg backdrop-blur-xs transition-transform group-hover:scale-105 bg-blue-950/90 border border-blue-500/60 text-blue-200">
+                  <Lock className="w-2.5 h-2.5 text-blue-400 shrink-0" />
                   <span>🔒 {tokenLabel} • KM {kmStart.toFixed(2)}–{kmEnd.toFixed(2)}</span>
                   <Eye className="w-2.5 h-2.5 text-slate-400 group-hover:text-white ml-0.5" />
                 </div>
                 {/* 1px Leader Line */}
-                <div className="w-[1px] h-3.5 bg-gradient-to-b from-purple-400 to-red-500" />
+                <div className="w-[1px] h-3.5 bg-blue-400/80" />
                 {/* Leader dot pin on track */}
-                <div className="w-1.5 h-1.5 rounded-full bg-red-400 -mt-0.5" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 -mt-0.5" />
               </div>
             </div>
           )}
 
-          {/* ── 4 Track Lines ──────────────────────── */}
+          {/* ── 4 Track Lines (Blue, Green, Grey Only) ──────── */}
           <div className="space-y-2 flex-1 flex flex-col justify-center mt-1">
 
             {/* Line 1: 25kV OHE */}
             <div className="flex items-center gap-3">
-              <div className="w-24 shrink-0 flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-400">
-                <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+              <div className="w-24 shrink-0 flex items-center gap-1.5 text-[10px] font-mono font-bold text-blue-400">
+                <Zap className="w-3 h-3 text-blue-400 shrink-0" />
                 <span>25kV OHE</span>
               </div>
               <div className="flex-1 h-2 bg-slate-800/90 rounded relative overflow-hidden">
-                <div className="absolute inset-0 bg-amber-950/20" />
-                {/* De-energized / Geofence Section */}
+                <div className="absolute inset-0 bg-slate-900/40" />
+                {/* De-energized / Geofence Section in Blue */}
                 <div
                   className={`absolute h-full transition-all duration-500 ${
                     catenaryTripped
-                      ? 'bg-red-500 animate-pulse'
-                      : 'bg-amber-400/80'
+                      ? 'bg-blue-500 animate-pulse'
+                      : 'bg-emerald-500/80'
                   }`}
                   style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                 />
@@ -153,8 +147,8 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
               <div className="w-36 shrink-0 text-right">
                 <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
                   catenaryTripped
-                    ? 'bg-red-950/80 border border-red-500/50 text-red-300'
-                    : 'bg-amber-950/60 border border-amber-500/30 text-amber-300'
+                    ? 'bg-blue-950/80 border border-blue-500/50 text-blue-300'
+                    : 'bg-emerald-950/60 border border-emerald-500/30 text-emerald-300'
                 }`}>
                   {catenaryTripped ? '⚡ ISOLATED FP-04' : '⚡ ENERGIZED 25KV'}
                 </span>
@@ -168,15 +162,11 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
               </div>
               <div className="flex-1 h-3.5 bg-slate-800/90 rounded relative overflow-hidden border border-slate-700/60">
                 <div className="absolute inset-0 bg-slate-900/60" />
-                {/* Colored Geofence Segment (No text overlapping bar) */}
+                {/* Colored Geofence Segment (Blue / Emerald Green) */}
                 {activeEvent && (
                   <div
                     onClick={() => onSelectEvent(activeEvent)}
-                    className={`absolute h-full top-0 cursor-pointer transition-all ${
-                      hasToken
-                        ? 'bg-purple-900/40 border-2 border-purple-500'
-                        : 'bg-red-900/50 border border-red-500'
-                    }`}
+                    className="absolute h-full top-0 cursor-pointer transition-all bg-blue-900/40 border-2 border-blue-500"
                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                     title={`Click to open details: ${activeEvent.id}`}
                   >
@@ -187,8 +177,8 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
               <div className="w-36 shrink-0 text-right">
                 <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
                   activeEvent?.status === 'ACTIVE_IN_PROGRESS'
-                    ? 'bg-red-950/80 border border-red-500/50 text-red-300'
-                    : 'bg-purple-950/80 border border-purple-500/40 text-purple-300'
+                    ? 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-300'
+                    : 'bg-blue-950/80 border border-blue-500/40 text-blue-300'
                 }`}>
                   {activeEvent?.status === 'ACTIVE_IN_PROGRESS' ? 'OCCUPIED (WORK)' : 'RESERVED'}
                 </span>
@@ -202,15 +192,15 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
               </div>
               <div className="flex-1 h-3.5 bg-slate-800/90 rounded relative overflow-hidden border border-slate-700/60">
                 <div className="absolute inset-0 bg-slate-900/60" />
-                {/* Amber Dashed TSR 30 km/h buffer */}
+                {/* Blue Dashed TSR 30 km/h buffer */}
                 <div
-                  className="absolute h-full top-0 bg-amber-950/40 border-2 border-dashed border-amber-500 rounded"
+                  className="absolute h-full top-0 bg-blue-950/40 border-2 border-dashed border-blue-500/70 rounded"
                   style={{ left: `${Math.max(0, leftPct - 4)}%`, width: `${widthPct + 8}%` }}
                   title="TSR 30 km/h Adjacent Buffer"
                 />
               </div>
               <div className="w-36 shrink-0 text-right">
-                <span className="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300">
+                <span className="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-950/80 border border-blue-500/40 text-blue-300">
                   CAUTION 30 KM/H
                 </span>
               </div>
@@ -234,11 +224,11 @@ export const CorridorTrackStrip: React.FC<CorridorTrackStripProps> = ({
           </div>
 
           {/* Bottom KM Chainage Scale */}
-          <div className="flex justify-between text-[9px] font-mono text-slate-500 pt-1 border-t border-slate-800/40">
+          <div className="flex justify-between text-[9px] font-mono text-slate-500 pt-1 border-t border-slate-800/60">
             <span>KM 140.00</span>
             <span>KM 141.00</span>
-            <span className="text-cyan-400 font-bold">KM 142.10 (LC-64)</span>
-            <span className="text-purple-400 font-bold">KM 143.04 (#14A)</span>
+            <span className="text-blue-400 font-bold">KM 142.10 (LC-64)</span>
+            <span className="text-blue-300 font-bold">KM 143.04 (#14A)</span>
             <span>KM 144.00</span>
             <span>KM 145.00</span>
             <span>KM 146.00</span>
