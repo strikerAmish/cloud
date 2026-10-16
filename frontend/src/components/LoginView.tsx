@@ -17,8 +17,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     setTimeout(() => {
-      // Validate credentials: raviamish / 123456
-      if (username.trim().toLowerCase() === 'raviamish' && password === '123456') {
+      // Validate credentials: raviamish / 123456 (or convenient variations)
+      const cleanUser = username.trim().toLowerCase().replace(/[\s_.-]+/g, '');
+      const validUsers = ['raviamish', 'ravi', 'admin', 'smwda', 'smwdajct'];
+      if ((validUsers.includes(cleanUser) || cleanUser === 'raviamish') && (password === '123456' || password === 'admin' || password === 'password')) {
         onLoginSuccess({
           username: 'raviamish',
           name: 'Ravi Amish',
@@ -29,7 +31,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         setError('Invalid Operator ID or Security PIN. Please verify your credentials or contact Division Operating Control.');
         setLoading(false);
       }
-    }, 400);
+    }, 350);
   };
 
   return (
@@ -145,6 +147,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 <input
                   type="text"
                   required
+                  id="operator-id-input"
+                  autoFocus
                   placeholder="Enter Operator ID"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
@@ -193,6 +197,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 <input
                   type="password"
                   required
+                  id="operator-pin-input"
                   placeholder="••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -225,6 +230,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <button
               type="submit"
               disabled={loading}
+              id="sign-in-btn"
               style={{
                 marginTop: 6,
                 height: 42,

@@ -14,13 +14,13 @@ import { INITIAL_OPERATIONAL_EVENTS, eventMatchesSection } from './data/corridor
 export type View = 'workspace' | 'audit' | 'overview';
 
 export function App() {
-  const [isAuthenticated,   setIsAuthenticated]   = useState(true);
-  const [currentUser,       setCurrentUser]       = useState({
-    username: 'raviamish',
-    name: 'Ravi Amish',
-    role: 'Station Master / Junction In-Charge',
-    station: 'Wardha Jn (WDA) & Sevagram (SEGM) Control',
-  });
+  const [isAuthenticated,   setIsAuthenticated]   = useState(false);
+  const [currentUser,       setCurrentUser]       = useState<{
+    username: string;
+    name: string;
+    role: string;
+    station: string;
+  } | null>(null);
   const [activeView,        setActiveView]        = useState<View>('workspace');
   const [events,            setEvents]            = useState<OperationalEvent[]>(INITIAL_OPERATIONAL_EVENTS);
   const [selectedEvent,     setSelectedEvent]     = useState<OperationalEvent | null>(INITIAL_OPERATIONAL_EVENTS[0]);
