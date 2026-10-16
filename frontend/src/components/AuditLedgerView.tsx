@@ -120,7 +120,7 @@ export const AuditLedgerView: React.FC = () => {
         const matchesEvent = b.event_id.toLowerCase().includes(query);
         const matchesNum = b.block_number.toString().includes(query);
         const matchesHash = b.block_hash.toLowerCase().includes(query);
-        const matchesSigner = b.multi_signatures.some(s => s.officer_id.toLowerCase().includes(query));
+        const matchesSigner = b.multi_signatures.some(s => s.officer_id?.toLowerCase().includes(query));
         if (!matchesEvent && !matchesNum && !matchesHash && !matchesSigner) return false;
       }
 

@@ -4,7 +4,7 @@ import {
   Clock, ShieldAlert, AlertOctagon, Database, ExternalLink,
   Lock, Unlock, Activity, Camera, MapPin, Users, Plus,
   Share2, Printer, X, Eye, Zap, ShieldCheck, ArrowRight,
-  AlertTriangle
+  AlertTriangle, RotateCcw, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { OperationalEvent, ApprovalRole, Department, PiggybackedDepartment } from '../types';
 import {
@@ -21,13 +21,13 @@ interface RightActionPaneProps {
 
 // 7-step full lifecycle stepper per Indian Railways operating manual
 const STEPPER = [
-  { num: 1, label: 'Draft',             keys: ['DRAFT'] },
-  { num: 2, label: 'Submitted',         keys: ['SUBMITTED'] },
-  { num: 3, label: 'Dep. Resolved',     keys: ['DEPENDENCY_RESOLVED'] },
-  { num: 4, label: 'Awaiting Approval', keys: ['AWAITING_APPROVAL'] },
-  { num: 5, label: 'Approved',          keys: ['APPROVED', 'SCHEDULED'] },
-  { num: 6, label: 'Active on Track',   keys: ['ACTIVE_IN_PROGRESS', 'WORK_COMPLETED'] },
-  { num: 7, label: 'Normalized',        keys: ['BLOCK_CLEARED', 'AUDIT_LOCKED', 'SAFETY_VERIFIED'] },
+  { num: 1, label: 'Draft',             status: 'DRAFT',               stage: 1, keys: ['DRAFT'], desc: 'Requisition memo being drafted by site engineer' },
+  { num: 2, label: 'Submitted',         status: 'SUBMITTED',           stage: 2, keys: ['SUBMITTED'], desc: 'Dispatched to Section Control & Station Master queue' },
+  { num: 3, label: 'Dep. Resolved',     status: 'DEPENDENCY_RESOLVED', stage: 3, keys: ['DEPENDENCY_RESOLVED'], desc: 'Automated G&SR ruleset & track dependencies verified' },
+  { num: 4, label: 'Awaiting Approval', status: 'AWAITING_APPROVAL',   stage: 4, keys: ['AWAITING_APPROVAL'], desc: 'Dual-key quorum: TPC, Controller & SM sign-offs' },
+  { num: 5, label: 'Approved',          status: 'APPROVED',            stage: 5, keys: ['APPROVED', 'SCHEDULED'], desc: 'Fencing token issued, line possession authorized' },
+  { num: 6, label: 'Active on Track',   status: 'ACTIVE_IN_PROGRESS',  stage: 6, keys: ['ACTIVE_IN_PROGRESS', 'WORK_COMPLETED'], desc: 'Field crew & tamping machines operating on track' },
+  { num: 7, label: 'Normalized',        status: 'BLOCK_CLEARED',       stage: 7, keys: ['BLOCK_CLEARED', 'AUDIT_LOCKED', 'SAFETY_VERIFIED'], desc: 'Track fit certificate signed, 25kV power restored' },
 ];
 
 export const RightActionPane: React.FC<RightActionPaneProps> = ({
@@ -52,7 +52,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
   
   // Interactive Station Master Toggles
   const [powerCutGranted, setPowerCutGranted] = useState<boolean>(
-    event?.station_actions?.power_cut_granted ?? event?.impact_vector?.catenary_25kv_power_trip ?? false
+    event?.station_actions?.power_cut_granted ?? false
   );
   const [trafficBlockGranted, setTrafficBlockGranted] = useState<boolean>(
     event?.station_actions?.traffic_block_granted ?? false
@@ -82,7 +82,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
   // Keep state synced when event changes
   React.useEffect(() => {
     if (event) {
-      setPowerCutGranted(event.station_actions?.power_cut_granted ?? event.impact_vector?.catenary_25kv_power_trip ?? false);
+      setPowerCutGranted(event.station_actions?.power_cut_granted ?? false);
       setTrafficBlockGranted(event.station_actions?.traffic_block_granted ?? false);
       setPointsClamped(event.station_actions?.points_clamped_confirmed ?? true);
       setPiggybackedList(event.piggybacked_depts || []);
@@ -128,20 +128,47 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
     (tpc?.approval_status === 'APPROVED' || !event.impact_vector?.catenary_25kv_power_trip) &&
     (ctrl?.approval_status === 'APPROVED' || trafficBlockGranted);
 
-  let currentStepIdx = STEPPER.findIndex(s => s.keys.includes(event.status));
-  if (currentStepIdx === -1) {
-    if (event.fsm_stage === 5) currentStepIdx = 5;
-    else if (event.fsm_stage >= 6) currentStepIdx = 6;
-    else currentStepIdx = Math.max(0, event.fsm_stage - 1);
+  let currentStepIdx = 0;
+  if (typeof event.fsm_stage === 'number' && event.fsm_stage >= 1 && event.fsm_stage <= 7) {
+    currentStepIdx = event.fsm_stage - 1;
+  } else {
+    const foundIdx = STEPPER.findIndex(s => s.keys.includes(event.status));
+    currentStepIdx = foundIdx >= 0 ? foundIdx : 0;
   }
-  const effectiveStep  = currentStepIdx;
+  const effectiveStep = currentStepIdx;
+
+  const handleSelectFsmStage = (targetIdx: number) => {
+    if (targetIdx < 0 || targetIdx >= STEPPER.length) return;
+    if (isHistoricalSealed) {
+      setActionMsg('Statutory Notice: Completed historical block records are sealed under Indian Railways G&SR 15.06 (Read-Only).');
+      return;
+    }
+    const targetStep = STEPPER[targetIdx];
+    event.fsm_stage = targetStep.stage;
+    event.status = targetStep.status as any;
+
+    if (targetStep.stage <= 2) {
+      event.status_color = '#64748B';
+    } else if (targetStep.stage <= 4) {
+      event.status_color = '#F59E0B';
+    } else if (targetStep.stage === 5) {
+      event.status_color = '#2563EB';
+    } else if (targetStep.stage === 6) {
+      event.status_color = '#3B82F6';
+    } else {
+      event.status_color = '#10B981';
+    }
+
+    setActionMsg(`✓ FSM Lifecycle Stage moved to Stage ${targetStep.num}: ${targetStep.label} (${targetStep.status})`);
+    onRefresh();
+  };
 
   const handleSign = async (role: ApprovalRole, dept: Department, officerId: string) => {
     setLoadingRole(role);
     setErrorMsg(null);
     try {
       await submitApproval(event.id, dept, role, officerId, 'APPROVED');
-      setActionMsg(`Statutory approval successfully recorded for ${officerId} (${dept})`);
+      setActionMsg(`✓ Statutory approval successfully recorded for ${officerId} (${dept})`);
       onRefresh();
     } catch {
       // Local optimistic update so UI is immediately responsive even offline
@@ -162,8 +189,29 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
           signed_at: new Date().toISOString(),
         });
       }
-      setActionMsg(`Statutory approval granted by ${officerId} (${dept})`);
+      setActionMsg(`✓ Statutory approval granted by ${officerId} (${dept})`);
       onRefresh();
+    } finally {
+      setLoadingRole(null);
+    }
+  };
+
+  const handleRevokeApproval = async (role: ApprovalRole, dept: Department, officerId: string) => {
+    if (isHistoricalSealed) return;
+    setLoadingRole(role);
+    setErrorMsg(null);
+    try {
+      // Update local event stakeholder status back to PENDING (reversible sign-off)
+      const existing = event.stakeholders.find(s => s.role === role);
+      if (existing) {
+        existing.approval_status = 'PENDING';
+        delete existing.signed_at;
+        delete existing.signature_hash;
+      }
+      setActionMsg(`↺ Statutory clearance revoked for ${officerId} (${dept}). Reverted to PENDING.`);
+      onRefresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to revoke clearance');
     } finally {
       setLoadingRole(null);
     }
@@ -1094,10 +1142,67 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
 
       {/* ── FSM Lifecycle Tracker ────────────────────── */}
       <div className="section-card">
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 12 }}>
-          Operational FSM Stage Tracker
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+              Operational FSM Stage Tracker
+            </span>
+            <span style={{ fontSize: 10, fontWeight: 700, background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', padding: '1px 6px', borderRadius: 4 }}>
+              Interactive G&amp;SR Lifecycle
+            </span>
+          </div>
+
+          {/* Stepper Quick Navigation Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => handleSelectFsmStage(effectiveStep - 1)}
+              disabled={effectiveStep === 0 || isHistoricalSealed}
+              id="fsm-prev-btn"
+              title="Step back to previous operational stage"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid #CBD5E1',
+                background: effectiveStep === 0 || isHistoricalSealed ? '#F8FAFC' : '#FFFFFF',
+                color: effectiveStep === 0 || isHistoricalSealed ? '#94A3B8' : '#334155',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: effectiveStep === 0 || isHistoricalSealed ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <ChevronLeft size={13} /> Prev Stage
+            </button>
+            <button
+              onClick={() => handleSelectFsmStage(effectiveStep + 1)}
+              disabled={effectiveStep === STEPPER.length - 1 || isHistoricalSealed}
+              id="fsm-next-btn"
+              title="Advance forward to next operational stage"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid #93C5FD',
+                background: effectiveStep === STEPPER.length - 1 || isHistoricalSealed ? '#F8FAFC' : '#EFF6FF',
+                color: effectiveStep === STEPPER.length - 1 || isHistoricalSealed ? '#94A3B8' : '#1D4ED8',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: effectiveStep === STEPPER.length - 1 || isHistoricalSealed ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Next Stage <ChevronRight size={13} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0, fontSize: 12 }}>
+
+        {/* 7-Step Interactive Stepper Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px 0', fontSize: 12 }}>
           {STEPPER.map((step, idx) => {
             const isCurrent = idx === effectiveStep;
             const isPast    = idx < effectiveStep;
@@ -1105,113 +1210,283 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
 
             return (
               <React.Fragment key={step.num}>
-                <span
-                  className={isCurrent ? 'fsm-step-active' : 'fsm-step'}
+                <button
+                  type="button"
+                  onClick={() => handleSelectFsmStage(idx)}
+                  disabled={isHistoricalSealed}
+                  id={`fsm-step-btn-${step.num}`}
+                  title={`Click to set corridor stage: ${step.num}. ${step.label} (${step.status})`}
                   style={{
-                    color: isPast ? '#10B981' : isCurrent ? '#1D4ED8' : '#94A3B8',
-                    fontWeight: isCurrent ? 700 : isPast ? 600 : 400,
-                    fontSize: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: isCurrent ? '4px 10px' : '4px 8px',
+                    borderRadius: 20,
+                    border: isCurrent
+                      ? '1.5px solid #2563EB'
+                      : isPast
+                      ? '1px solid #BBF7D0'
+                      : '1px solid #E2E8F0',
+                    background: isCurrent
+                      ? '#EFF6FF'
+                      : isPast
+                      ? '#F0FDF4'
+                      : '#FFFFFF',
+                    color: isCurrent
+                      ? '#1D4ED8'
+                      : isPast
+                      ? '#15803D'
+                      : '#64748B',
+                    fontWeight: isCurrent ? 700 : isPast ? 600 : 500,
+                    fontSize: 11.5,
+                    cursor: isHistoricalSealed ? 'default' : 'pointer',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isCurrent ? '0 1px 3px rgba(37,99,235,0.15)' : 'none',
                   }}
                 >
-                  {step.num}. {step.label}
-                </span>
+                  {isPast ? (
+                    <CheckCircle2 size={12} color="#16A34A" />
+                  ) : isCurrent ? (
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2563EB' }} />
+                  ) : (
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#CBD5E1' }} />
+                  )}
+                  <span>{step.num}. {step.label}</span>
+                </button>
                 {!isLast && <span className="fsm-dash" />}
               </React.Fragment>
             );
           })}
         </div>
+
+        {/* Current Active Stage Description Callout */}
+        <div
+          style={{
+            marginTop: 12,
+            padding: '8px 12px',
+            background: '#F8FAFC',
+            borderRadius: 6,
+            border: '1px solid #E2E8F0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 11.5,
+            color: '#475569',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 700, color: '#0F172A' }}>
+              Stage {STEPPER[effectiveStep]?.num} of 7: {STEPPER[effectiveStep]?.label}
+            </span>
+            <span style={{ color: '#94A3B8' }}>•</span>
+            <span>{STEPPER[effectiveStep]?.desc}</span>
+          </div>
+          <span style={{ fontSize: 10.5, color: '#94A3B8', fontStyle: 'italic' }}>
+            Click any stage pill to switch
+          </span>
+        </div>
       </div>
 
       {/* ── Human-in-the-Loop Statutory Sign-off Rows ── */}
       <div className="section-card">
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
-          Statutory Multi-Officer Clearances
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+            Statutory Multi-Officer Clearances
+          </div>
+          <span style={{ fontSize: 11, color: '#15803D', fontWeight: 600, background: '#DCFCE7', padding: '2px 8px', borderRadius: 4 }}>
+            Dual-Key Quorum
+          </span>
         </div>
         <div style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 14 }}>
-          Human-in-the-loop statutory digital sign-offs
+          Human-in-the-loop statutory digital sign-offs (with reversible authorization under G&amp;SR rules)
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Row 1: TPC */}
-          <div className="auth-row">
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#2563EB' }}>
-              {tpc?.approval_status === 'APPROVED' || powerCutGranted ? <CheckCircle2 size={13} color="#16A34A" /> : '1'}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
-                Traction Power Controller (TPC)
-                {(tpc?.approval_status === 'APPROVED' || powerCutGranted) && (
-                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
-                    ✓ SIGNED (Form ETR-1)
+          {(() => {
+            const isTpcApproved = tpc?.approval_status === 'APPROVED';
+            return (
+              <div className="auth-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: isTpcApproved ? '#F0FDF4' : '#FFFFFF' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: isTpcApproved ? '#DCFCE7' : '#EFF6FF', border: isTpcApproved ? '1.5px solid #86EFAC' : '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: isTpcApproved ? '#16A34A' : '#2563EB', flexShrink: 0 }}>
+                  {isTpcApproved ? <CheckCircle2 size={15} color="#16A34A" /> : '1'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Traction Power Controller (TPC)
+                    {isTpcApproved && (
+                      <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
+                        ✓ SIGNED (Form ETR-1)
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <span>TPC_NGP_01 • SCADA Feeder Clearance</span>
+                    {isTpcApproved && tpc?.signed_at && (
+                      <span style={{ color: '#16A34A', fontSize: 10.5 }}>
+                        • Signed at {new Date(tpc.signed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                {isHistoricalSealed ? (
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569', background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <Lock size={12} /> Signed (Sealed)
                   </span>
+                ) : isTpcApproved ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#15803D', background: '#DCFCE7', border: '1px solid #BBF7D0', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <CheckCircle2 size={13} color="#16A34A" /> Approved
+                    </span>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleRevokeApproval('TPC', 'OHE', 'TPC_NGP_01')}
+                      disabled={loadingRole === 'TPC'}
+                      id="revoke-btn-tpc"
+                      title="Undo / Revoke this clearance and return to Pending"
+                      style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, color: '#475569', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <RotateCcw size={12} /> Undo
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleSign('TPC', 'OHE', 'TPC_NGP_01')}
+                    disabled={loadingRole === 'TPC'}
+                    id="auth-btn-tpc"
+                  >
+                    <FileSignature size={12} /> Sign &amp; Approve
+                  </button>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>TPC_NGP_01 • SCADA Feeder Clearance</div>
-            </div>
-            <button
-              className="btn-primary"
-              onClick={() => handleSign('TPC', 'OHE', 'TPC_NGP_01')}
-              disabled={isHistoricalSealed || tpc?.approval_status === 'APPROVED' || powerCutGranted}
-              id="auth-btn-tpc"
-              style={{ opacity: isHistoricalSealed ? 0.8 : 1, cursor: isHistoricalSealed ? 'not-allowed' : 'pointer' }}
-            >
-              {isHistoricalSealed ? '✓ Signed (Sealed)' : tpc?.approval_status === 'APPROVED' || powerCutGranted ? '✓ Approved' : 'Sign & Approve'}
-            </button>
-          </div>
+            );
+          })()}
 
           {/* Row 2: Section Controller */}
-          <div className="auth-row">
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#2563EB' }}>
-              {ctrl?.approval_status === 'APPROVED' || trafficBlockGranted ? <CheckCircle2 size={13} color="#16A34A" /> : '2'}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
-                Section Controller (Wardha Control)
-                {(ctrl?.approval_status === 'APPROVED' || trafficBlockGranted) && (
-                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
-                    ✓ AUTHORIZED
+          {(() => {
+            const isCtrlApproved = ctrl?.approval_status === 'APPROVED';
+            return (
+              <div className="auth-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: isCtrlApproved ? '#F0FDF4' : '#FFFFFF' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: isCtrlApproved ? '#DCFCE7' : '#EFF6FF', border: isCtrlApproved ? '1.5px solid #86EFAC' : '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: isCtrlApproved ? '#16A34A' : '#2563EB', flexShrink: 0 }}>
+                  {isCtrlApproved ? <CheckCircle2 size={15} color="#16A34A" /> : '2'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Section Controller (Wardha Control)
+                    {isCtrlApproved && (
+                      <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
+                        ✓ AUTHORIZED
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <span>CTRL_SEC_WDA_02 • Train Path Feasibility</span>
+                    {isCtrlApproved && ctrl?.signed_at && (
+                      <span style={{ color: '#16A34A', fontSize: 10.5 }}>
+                        • Authorized at {new Date(ctrl.signed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                {isHistoricalSealed ? (
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569', background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <Lock size={12} /> Authorized (Sealed)
                   </span>
+                ) : isCtrlApproved ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#15803D', background: '#DCFCE7', border: '1px solid #BBF7D0', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <CheckCircle2 size={13} color="#16A34A" /> Authorized
+                    </span>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleRevokeApproval('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_WDA_02')}
+                      disabled={loadingRole === 'SECTION_CONTROLLER'}
+                      id="revoke-btn-ctrl"
+                      title="Undo / Revoke this authorization and return to Pending"
+                      style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, color: '#475569', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <RotateCcw size={12} /> Undo
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleSign('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_WDA_02')}
+                    disabled={loadingRole === 'SECTION_CONTROLLER'}
+                    id="auth-btn-ctrl"
+                  >
+                    <FileSignature size={12} /> Authorize Block
+                  </button>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>CTRL_SEC_WDA_02 • Train Path Feasibility</div>
-            </div>
-            <button
-              className="btn-primary"
-              onClick={() => handleSign('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_WDA_02')}
-              disabled={isHistoricalSealed || ctrl?.approval_status === 'APPROVED' || trafficBlockGranted}
-              id="auth-btn-ctrl"
-              style={{ opacity: isHistoricalSealed ? 0.8 : 1, cursor: isHistoricalSealed ? 'not-allowed' : 'pointer' }}
-            >
-              {isHistoricalSealed ? '✓ Authorized (Sealed)' : ctrl?.approval_status === 'APPROVED' || trafficBlockGranted ? '✓ Authorized' : 'Authorize Block'}
-            </button>
-          </div>
+            );
+          })()}
 
           {/* Row 3: Station Master (Current Operator) */}
-          <div className="auth-row">
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#2563EB' }}>
-              {pointsClamped ? <CheckCircle2 size={13} color="#16A34A" /> : '3'}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
-                Station Master (Ravi Amish, SM/WDA)
-                {pointsClamped && (
-                  <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
-                    ✓ STATUTORY SEAL
+          {(() => {
+            const isSmApproved = sm?.approval_status === 'APPROVED';
+            return (
+              <div className="auth-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: isSmApproved ? '#F0FDF4' : '#FFFFFF' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: isSmApproved ? '#DCFCE7' : '#EFF6FF', border: isSmApproved ? '1.5px solid #86EFAC' : '1.5px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: isSmApproved ? '#16A34A' : '#2563EB', flexShrink: 0 }}>
+                  {isSmApproved ? <CheckCircle2 size={15} color="#16A34A" /> : '3'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Station Master (Ravi Amish, SM/WDA)
+                    {isSmApproved && (
+                      <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
+                        ✓ MASTER SEAL GRANTED
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <span>Physical Point Clamping &amp; Station Interlocking</span>
+                    {isSmApproved && sm?.signed_at && (
+                      <span style={{ color: '#16A34A', fontSize: 10.5 }}>
+                        • Sealed at {new Date(sm.signed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                {isHistoricalSealed ? (
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#475569', background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <Lock size={12} /> Master Seal (Sealed)
                   </span>
+                ) : isSmApproved ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: '#15803D', background: '#DCFCE7', border: '1px solid #BBF7D0', padding: '6px 12px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <CheckCircle2 size={13} color="#16A34A" /> Sealed
+                    </span>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleRevokeApproval('STATION_MASTER', 'OPERATING', 'SM_WDA_JCT')}
+                      disabled={loadingRole === 'STATION_MASTER'}
+                      id="revoke-btn-sm"
+                      title="Undo / Revoke this Station Master seal and return to Pending"
+                      style={{ padding: '6px 10px', fontSize: 11, fontWeight: 600, color: '#475569', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <RotateCcw size={12} /> Undo
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleSign('STATION_MASTER', 'OPERATING', 'SM_WDA_JCT')}
+                    disabled={loadingRole === 'STATION_MASTER'}
+                    id="auth-btn-sm"
+                  >
+                    <FileSignature size={12} /> Grant Final Station Master Seal
+                  </button>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8' }}>Physical Point Clamping &amp; Station Interlocking</div>
-            </div>
-            <button
-              className="btn-primary"
-              onClick={() => handleSign('STATION_MASTER', 'OPERATING', 'SM_WDA_JCT')}
-              disabled={isHistoricalSealed || sm?.approval_status === 'APPROVED'}
-              id="auth-btn-sm"
-              style={{ opacity: isHistoricalSealed ? 0.8 : 1, cursor: isHistoricalSealed ? 'not-allowed' : 'pointer' }}
-            >
-              {isHistoricalSealed ? '✓ Master Seal (Sealed)' : sm?.approval_status === 'APPROVED' ? '✓ Master Seal Granted' : 'Grant Final Station Master Seal'}
-            </button>
-          </div>
+            );
+          })()}
         </div>
       </div>
 

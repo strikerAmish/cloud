@@ -223,7 +223,7 @@ export const TelemetryBellDrawer: React.FC<TelemetryBellDrawerProps> = ({
                       fontFamily: 'JetBrains Mono, monospace',
                       color: '#374151',
                       lineHeight: 1.6,
-                      wordBreak: 'break-words',
+                      wordBreak: 'break-word',
                       margin: 0,
                     }}
                   >
