@@ -157,7 +157,9 @@ def seed_baseline_event(cursor):
         (str(uuid.uuid4()), sample_id, "OHE", "TPC", "TPC_NGP_01", "APPROVED", "8f3ca9b12a4d81e997ed25519tpcngp01", now.isoformat().replace("+00:00", "Z"), None),
         (str(uuid.uuid4()), sample_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "PENDING", None, None, None),
         (str(uuid.uuid4()), sample_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "b12a4d81e997ed25519smwardha01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), sample_id, "OHE", "FIELD_SUPERVISOR", "SSE_OHE_WDA_04", "PENDING", None, None, None)
+        (str(uuid.uuid4()), sample_id, "OHE", "FIELD_SUPERVISOR", "SSE_OHE_WDA_04", "PENDING", None, None, None),
+        (str(uuid.uuid4()), sample_id, "S_AND_T", "SIGNAL_INSPECTOR", "SSE_SIG_WDA_01", "APPROVED", "c45a4d81e997ed25519ssesig01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), sample_id, "CIVIL_P_WAY", "PERMANENT_WAY_ENG", "SSE_PWAY_SEGM_02", "APPROVED", "d67a4d81e997ed25519ssepway02", now.isoformat().replace("+00:00", "Z"), None)
     ]
     cursor.executemany("""
     INSERT INTO event_stakeholders (
@@ -194,6 +196,78 @@ def seed_baseline_event(cursor):
         json.dumps({"event_id": sample_id, "stage": "AWAITING_APPROVAL", "track": "UP_MAIN"}),
         "COMMITTED"
     ))
+
+    # Event 2: S_AND_T Active Work
+    event2_id = "e82b7194-8536-41ef-85bc-f16cd2a01bf8"
+    cursor.execute("""
+    INSERT INTO operational_events (
+        id, division, section, track_id, km_start, km_end, status,
+        requested_start, requested_end, fencing_token, impact_vector,
+        description, originator_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event2_id,
+        "NGP",
+        "Wardha-Sevagram",
+        "UP_MAIN",
+        143.04,
+        143.50,
+        "ACTIVE_IN_PROGRESS",
+        req_start,
+        req_end,
+        893,
+        json.dumps({"points_clamping_required": True, "speed_restriction_kmh": 15, "signal_disconnection_memo": True}),
+        "Point Machine #14A Overhaul & Electronic Interlocking Lock (SWR Sec 8.4)",
+        "SSE_SIG_WDA_01",
+        now.isoformat().replace("+00:00", "Z"),
+        now.isoformat().replace("+00:00", "Z")
+    ))
+
+    cursor.executemany("""
+    INSERT INTO event_stakeholders (
+        id, event_id, department, role, officer_id, approval_status, signature_hash, signed_at, rejection_reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        (str(uuid.uuid4()), event2_id, "S_AND_T", "SIGNAL_INSPECTOR", "SSE_SIG_WDA_01", "APPROVED", "sig893ssesig01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event2_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "sig893smwda01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event2_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "APPROVED", "sig893ctrl02", now.isoformat().replace("+00:00", "Z"), None)
+    ])
+
+    # Event 3: CIVIL_P_WAY Approved Block
+    event3_id = "c31e9045-9247-49ef-97ce-b25ef3b12ce9"
+    cursor.execute("""
+    INSERT INTO operational_events (
+        id, division, section, track_id, km_start, km_end, status,
+        requested_start, requested_end, fencing_token, impact_vector,
+        description, originator_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event3_id,
+        "NGP",
+        "Wardha-Sevagram",
+        "DN_MAIN",
+        144.00,
+        145.20,
+        "APPROVED",
+        req_start,
+        req_end,
+        894,
+        json.dumps({"absolute_traffic_block": True, "speed_restriction_kmh": 30, "track_tamping_machine": "CSM-952"}),
+        "Deep Ballast Track Tamping & Continuous Rail Testing (G&SR 4.12)",
+        "SSE_PWAY_SEGM_02",
+        now.isoformat().replace("+00:00", "Z"),
+        now.isoformat().replace("+00:00", "Z")
+    ))
+
+    cursor.executemany("""
+    INSERT INTO event_stakeholders (
+        id, event_id, department, role, officer_id, approval_status, signature_hash, signed_at, rejection_reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        (str(uuid.uuid4()), event3_id, "CIVIL_P_WAY", "PERMANENT_WAY_ENG", "SSE_PWAY_SEGM_02", "APPROVED", "sig894ssepway02", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event3_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "APPROVED", "sig894ctrl02", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event3_id, "OPERATING", "STATION_MASTER", "SM_SEGM_JCT", "APPROVED", "sig894smsegm01", now.isoformat().replace("+00:00", "Z"), None)
+    ])
 
 
 # Initialize the database immediately

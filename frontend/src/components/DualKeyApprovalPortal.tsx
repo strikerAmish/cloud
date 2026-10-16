@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import {
-  KeyRound,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Zap,
   Shield,
-  FileSignature,
+  KeyRound,
+  CheckCircle2,
   Lock,
+  FileSignature,
+  Zap,
   Clock,
-  Terminal
+  AlertOctagon
 } from 'lucide-react';
 import { OperationalEvent, ApprovalRole, Department } from '../types';
 import { submitApproval } from '../api';
@@ -25,8 +23,8 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
 
   if (!event) {
     return (
-      <div className="p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl">
-        No event selected for Dual-Key Approval.
+      <div className="p-8 text-center text-slate-500 font-mono text-sm bg-[#12161f] rounded-xl border border-slate-800 neo-card">
+        Select an operational event to review Dual-Key multi-party statutory sign-offs.
       </div>
     );
   }
@@ -38,30 +36,28 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
       await submitApproval(event.id, dept, role, officerId, 'APPROVED');
       onRefresh();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Approval sign-off failed');
+      setErrorMsg(err.message || 'Statutory sign-off failed');
     } finally {
       setLoadingRole(null);
     }
   };
 
-  const getStakeholder = (role: ApprovalRole) => {
-    return event.stakeholders.find((s) => s.role === role);
-  };
+  const getStakeholder = (role: ApprovalRole) => event.stakeholders.find((s) => s.role === role);
 
-  const tpcStakeholder = getStakeholder('TPC' as ApprovalRole);
-  const ctrlStakeholder = getStakeholder('SECTION_CONTROLLER' as ApprovalRole);
-  const smStakeholder = getStakeholder('STATION_MASTER' as ApprovalRole);
-  const sseStakeholder = getStakeholder('FIELD_SUPERVISOR' as ApprovalRole);
+  const tpcStakeholder = getStakeholder('TPC');
+  const ctrlStakeholder = getStakeholder('SECTION_CONTROLLER');
+  const smStakeholder = getStakeholder('STATION_MASTER');
+  const sseStakeholder = getStakeholder('FIELD_SUPERVISOR');
 
   const dualKeyCleared = tpcStakeholder?.approval_status === 'APPROVED' && ctrlStakeholder?.approval_status === 'APPROVED';
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
+      {/* Top Banner */}
+      <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 neo-card">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold bg-cyan-950 text-cyan-400 px-2.5 py-0.5 rounded border border-cyan-500/40">
+            <span className="text-xs font-mono font-bold bg-blue-950 text-blue-300 px-2.5 py-0.5 rounded border border-blue-500/40">
               SCREEN 4 • DUAL-KEY MULTI-PARTY APPROVAL PORTAL
             </span>
             <span className="text-xs font-mono text-slate-400">Event: {event.id.substring(0, 8)}...</span>
@@ -78,7 +74,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
         <div className={`px-4 py-2 rounded-xl border font-mono text-xs font-bold flex items-center gap-2 ${
           dualKeyCleared
             ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300'
-            : 'bg-amber-950/80 border-amber-500 text-amber-300'
+            : 'bg-blue-950/80 border-blue-500 text-blue-300'
         }`}>
           <KeyRound className="w-4 h-4" />
           <span>{dualKeyCleared ? 'DUAL-KEY QUORUM MET (APPROVED)' : 'DUAL-KEY PENDING SIGN-OFF'}</span>
@@ -86,7 +82,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
       </div>
 
       {errorMsg && (
-        <div className="p-3 rounded-lg bg-red-950/80 border border-red-500 text-xs text-red-200">
+        <div className="p-3 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-300">
           {errorMsg}
         </div>
       )}
@@ -94,17 +90,17 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
       {/* Role Decision Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Card 1: Traction Power Controller (TPC) */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+        <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between neo-card">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-blue-400" />
                 KEY 1 • TRACTION POWER CONTROLLER (TPC)
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 tpcStakeholder?.approval_status === 'APPROVED'
                   ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
-                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+                  : 'bg-slate-900 text-blue-300 border border-blue-700'
               }`}>
                 {tpcStakeholder?.approval_status || 'PENDING'}
               </span>
@@ -115,8 +111,8 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               Authorizes 25kV Catenary de-energization from Feeding Post FP-04 to FP-06. Confirms electrical isolation zone.
             </p>
 
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
-              <div>• Officer ID: <span className="text-cyan-400">{tpcStakeholder?.officer_id || 'TPC_NGP_01'}</span></div>
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
+              <div>• Officer ID: <span className="text-blue-400">{tpcStakeholder?.officer_id || 'TPC_NGP_01'}</span></div>
               <div>• Statutory Rule: ACTM Vol. II Section 20615</div>
               <div>• Sub-Station: Wardha Traction Sub-Station (TSS)</div>
               {tpcStakeholder?.signature_hash && (
@@ -130,15 +126,19 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           <button
             onClick={() => handleSign('TPC' as ApprovalRole, 'OHE' as Department, 'TPC_NGP_01')}
             disabled={loadingRole === 'TPC' || tpcStakeholder?.approval_status === 'APPROVED'}
-            className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              tpcStakeholder?.approval_status === 'APPROVED'
+                ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 cursor-default'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+            }`}
           >
             <FileSignature className="w-4 h-4" />
-            {tpcStakeholder?.approval_status === 'APPROVED' ? 'Signed (Form ETR-1 Issued)' : 'Sign TPC ETR-1 Power Block'}
+            {tpcStakeholder?.approval_status === 'APPROVED' ? '✓ Signed (Form ETR-1 Issued)' : 'Sign TPC ETR-1 Power Block'}
           </button>
         </div>
 
         {/* Card 2: Operating Section Controller */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+        <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between neo-card">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
@@ -148,7 +148,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 ctrlStakeholder?.approval_status === 'APPROVED'
                   ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
-                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+                  : 'bg-slate-900 text-blue-300 border border-blue-700'
               }`}>
                 {ctrlStakeholder?.approval_status || 'PENDING'}
               </span>
@@ -159,8 +159,8 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               Evaluates live train charts in COA, timetables, and passenger rake regulation per G&SR Chapter IV.
             </p>
 
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
-              <div>• Officer ID: <span className="text-cyan-400">{ctrlStakeholder?.officer_id || 'CTRL_SEC_WDA_02'}</span></div>
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
+              <div>• Officer ID: <span className="text-blue-400">{ctrlStakeholder?.officer_id || 'CTRL_SEC_WDA_02'}</span></div>
               <div>• Statutory Rule: G&SR Chapter IV (Line Block Grant)</div>
               <div>• Corridor: Wardha-Sevagram UP MAIN</div>
               {ctrlStakeholder?.signature_hash && (
@@ -174,25 +174,29 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           <button
             onClick={() => handleSign('SECTION_CONTROLLER' as ApprovalRole, 'OPERATING' as Department, 'CTRL_SEC_WDA_02')}
             disabled={loadingRole === 'SECTION_CONTROLLER' || ctrlStakeholder?.approval_status === 'APPROVED'}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              ctrlStakeholder?.approval_status === 'APPROVED'
+                ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 cursor-default'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+            }`}
           >
             <FileSignature className="w-4 h-4" />
-            {ctrlStakeholder?.approval_status === 'APPROVED' ? 'Signed (Traffic Block Granted)' : 'Sign Section Controller Traffic Block'}
+            {ctrlStakeholder?.approval_status === 'APPROVED' ? '✓ Signed (Traffic Block Granted)' : 'Sign Section Controller Traffic Block'}
           </button>
         </div>
 
         {/* Card 3: Station Master (Interlocking & Clamping) */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+        <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between neo-card">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono font-bold text-cyan-400 flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-blue-400" />
                 STATION MASTER INTERLOCKING & POINT CLAMPING
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 smStakeholder?.approval_status === 'APPROVED'
                   ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
-                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+                  : 'bg-slate-900 text-blue-300 border border-blue-700'
               }`}>
                 {smStakeholder?.approval_status || 'PENDING'}
               </span>
@@ -203,8 +207,8 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               Verifies electronic route interlocking locked against target track. Confirms physical clamps on points #14A/B.
             </p>
 
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
-              <div>• Officer ID: <span className="text-cyan-400">{smStakeholder?.officer_id || 'SM_WDA_JCT'}</span></div>
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
+              <div>• Officer ID: <span className="text-blue-400">{smStakeholder?.officer_id || 'SM_WDA_JCT'}</span></div>
               <div>• Cabin: Wardha North Cabin (RRI)</div>
               <div>• Interlocking State: CLAMPED & PADLOCKED</div>
             </div>
@@ -213,25 +217,29 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           <button
             onClick={() => handleSign('STATION_MASTER' as ApprovalRole, 'OPERATING' as Department, 'SM_WDA_JCT')}
             disabled={loadingRole === 'STATION_MASTER' || smStakeholder?.approval_status === 'APPROVED'}
-            className="w-full py-2.5 px-4 bg-cyan-700 hover:bg-cyan-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              smStakeholder?.approval_status === 'APPROVED'
+                ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 cursor-default'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+            }`}
           >
             <Lock className="w-4 h-4" />
-            {smStakeholder?.approval_status === 'APPROVED' ? 'Points Clamped & Verified' : 'Confirm SM Point Clamping'}
+            {smStakeholder?.approval_status === 'APPROVED' ? '✓ Points Clamped & Verified' : 'Confirm SM Point Clamping'}
           </button>
         </div>
 
         {/* Card 4: Field Supervisor (SSE OHE / P-Way) */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between">
+        <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-lg relative flex flex-col justify-between neo-card">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono font-bold text-purple-400 flex items-center gap-1.5">
-                <FileSignature className="w-4 h-4 text-purple-400" />
+              <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                <FileSignature className="w-4 h-4 text-blue-400" />
                 FIELD SUPERVISOR PERMIT-TO-WORK (ETR-3)
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 sseStakeholder?.approval_status === 'APPROVED'
                   ? 'bg-emerald-950 text-emerald-300 border border-emerald-600'
-                  : 'bg-amber-950 text-amber-300 border border-amber-600'
+                  : 'bg-slate-900 text-blue-300 border border-blue-700'
               }`}>
                 {sseStakeholder?.approval_status || 'PENDING'}
               </span>
@@ -242,8 +250,8 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               Field crew attaches physical earth discharge rods to 25kV catenary. Assumes statutory site custody.
             </p>
 
-            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4">
-              <div>• Officer ID: <span className="text-cyan-400">{sseStakeholder?.officer_id || 'SSE_OHE_WDA_04'}</span></div>
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
+              <div>• Officer ID: <span className="text-blue-400">{sseStakeholder?.officer_id || 'SSE_OHE_WDA_04'}</span></div>
               <div>• Form Code: ACTM ETR-3 (Permit-to-Work)</div>
               <div>• Rods Applied: 2 Rods (Upstream & Downstream)</div>
             </div>
@@ -252,10 +260,14 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           <button
             onClick={() => handleSign('FIELD_SUPERVISOR' as ApprovalRole, 'OHE' as Department, 'SSE_OHE_WDA_04')}
             disabled={loadingRole === 'FIELD_SUPERVISOR' || sseStakeholder?.approval_status === 'APPROVED'}
-            className="w-full py-2.5 px-4 bg-purple-700 hover:bg-purple-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              sseStakeholder?.approval_status === 'APPROVED'
+                ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 cursor-default'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25'
+            }`}
           >
             <Zap className="w-4 h-4" />
-            {sseStakeholder?.approval_status === 'APPROVED' ? 'Permit ETR-3 Active' : 'Issue Field Permit ETR-3'}
+            {sseStakeholder?.approval_status === 'APPROVED' ? '✓ Permit ETR-3 Active' : 'Issue Field Permit ETR-3'}
           </button>
         </div>
       </div>

@@ -82,11 +82,11 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden my-8">
+      <div className="bg-[#12161f] border border-slate-800 rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden my-8 neo-card">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-950 p-5 border-b border-slate-700 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 p-5 border-b border-slate-800 flex items-center justify-between">
           <div>
-            <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded border border-cyan-500/40">
+            <span className="text-xs font-mono font-bold text-blue-300 bg-blue-950/80 px-2.5 py-0.5 rounded border border-blue-500/40">
               SCREEN 2 • WORKFLOW REQUISITION
             </span>
             <h2 className="text-lg font-bold text-white mt-1">
@@ -103,16 +103,16 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
 
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           {error && (
-            <div className="p-3 rounded-lg bg-red-950/80 border border-red-500 text-xs text-red-200 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <div className="p-3 rounded-lg bg-slate-900 border border-blue-500/40 text-xs text-blue-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-400 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* 7-Stage OHE Workflow Visualizer Guide */}
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 neo-pressed">
             <h4 className="text-xs font-bold text-slate-300 font-mono flex items-center gap-2">
-              <Clock className="w-4 h-4 text-cyan-400" />
+              <Clock className="w-4 h-4 text-blue-400" />
               Mandatory 7-Stage OHE Power & Traffic Block Workflow (ACTM Vol. II & G&SR):
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] font-mono">
@@ -126,7 +126,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                 { step: '7', title: 'Clearance & S3 Seal', actor: 'Dual Sign-off' },
               ].map((s) => (
                 <div key={s.step} className="p-2 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-cyan-400 font-bold">Stage 0{s.step}</div>
+                  <div className="text-blue-400 font-bold">Stage 0{s.step}</div>
                   <div className="text-slate-200 font-semibold">{s.title}</div>
                   <div className="text-slate-400 text-[10px]">{s.actor}</div>
                 </div>
@@ -142,7 +142,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                 type="text"
                 value={division}
                 onChange={(e) => setDivision(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
               />
             </div>
 
@@ -152,7 +152,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                 type="text"
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
               />
             </div>
 
@@ -161,7 +161,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
               <select
                 value={trackId}
                 onChange={(e) => setTrackId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
               >
                 <option value="UP_MAIN">UP_MAIN (Nagpur ⇄ Wardha)</option>
                 <option value="DN_MAIN">DN_MAIN (Wardha ⇄ Nagpur)</option>
@@ -178,7 +178,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   step="0.01"
                   value={kmStart}
                   onChange={(e) => setKmStart(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
                 />
               </div>
               <div>
@@ -188,7 +188,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   step="0.01"
                   value={kmEnd}
                   onChange={(e) => setKmEnd(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
                 />
               </div>
             </div>
@@ -200,7 +200,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-sans"
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-sans"
             />
           </div>
 
@@ -211,9 +211,9 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Power Trip */}
-              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 neo-card">
                 <div className="flex items-center gap-2.5">
-                  <Zap className="w-4 h-4 text-amber-400" />
+                  <Zap className="w-4 h-4 text-blue-400" />
                   <div>
                     <div className="text-xs font-semibold text-white">25kV Catenary Power Trip</div>
                     <div className="text-[11px] text-slate-400">Isolate Feeding Posts FP-04 to FP-06</div>
@@ -223,14 +223,14 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   type="checkbox"
                   checked={powerTrip}
                   onChange={(e) => setPowerTrip(e.target.checked)}
-                  className="w-4 h-4 rounded text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </label>
 
               {/* Traffic Block */}
-              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 neo-card">
                 <div className="flex items-center gap-2.5">
-                  <Shield className="w-4 h-4 text-red-400" />
+                  <Shield className="w-4 h-4 text-blue-400" />
                   <div>
                     <div className="text-xs font-semibold text-white">Absolute Traffic Block</div>
                     <div className="text-[11px] text-slate-400">Total track possession on {trackId}</div>
@@ -240,14 +240,14 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   type="checkbox"
                   checked={trafficBlock}
                   onChange={(e) => setTrafficBlock(e.target.checked)}
-                  className="w-4 h-4 rounded text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </label>
 
               {/* TSR */}
-              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 neo-card">
                 <div className="flex items-center gap-2.5">
-                  <Clock className="w-4 h-4 text-yellow-400" />
+                  <Clock className="w-4 h-4 text-blue-400" />
                   <div>
                     <div className="text-xs font-semibold text-white">Adjacent Track TSR 30 km/h</div>
                     <div className="text-[11px] text-slate-400">Impose speed restriction on DN MAIN</div>
@@ -257,14 +257,14 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   type="checkbox"
                   checked={speedRestriction}
                   onChange={(e) => setSpeedRestriction(e.target.checked)}
-                  className="w-4 h-4 rounded text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </label>
 
               {/* Point Clamping */}
-              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+              <label className="flex items-center justify-between p-3 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 neo-card">
                 <div className="flex items-center gap-2.5">
-                  <MapPin className="w-4 h-4 text-cyan-400" />
+                  <MapPin className="w-4 h-4 text-blue-400" />
                   <div>
                     <div className="text-xs font-semibold text-white">Physical Point Clamping</div>
                     <div className="text-[11px] text-slate-400">SM padlocks crossover points #14A/B</div>
@@ -274,7 +274,7 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                   type="checkbox"
                   checked={pointClamping}
                   onChange={(e) => setPointClamping(e.target.checked)}
-                  className="w-4 h-4 rounded text-cyan-600 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
                 />
               </label>
             </div>
@@ -285,21 +285,21 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
         <div className="bg-slate-950 p-4 border-t border-slate-800 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-all"
+            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-all neo-button"
           >
             Cancel
           </button>
           <button
             onClick={() => handleSubmit(true)}
             disabled={loading}
-            className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold cursor-pointer transition-all disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold cursor-pointer transition-all disabled:opacity-50 neo-button"
           >
             Save as Draft
           </button>
           <button
             onClick={() => handleSubmit(false)}
             disabled={loading}
-            className="px-5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-lg shadow-cyan-600/30 cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
+            className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
           >
             <FileCheck2 className="w-4 h-4" />
             {loading ? 'Validating SOP...' : 'Submit Requisition'}

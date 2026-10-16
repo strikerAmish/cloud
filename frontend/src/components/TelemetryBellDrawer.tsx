@@ -14,57 +14,140 @@ export const TelemetryBellDrawer: React.FC<TelemetryBellDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Filter out noise — only operational telemetry (ignore INITIAL_SNAPSHOT)
-  const opNotifs = notifications.filter((n) => !n.includes('INITIAL_SNAPSHOT'));
+  const opNotifs = notifications.filter(n => !n.includes('INITIAL_SNAPSHOT'));
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs transition-opacity"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        background: 'rgba(15, 23, 42, 0.35)',
+        backdropFilter: 'blur(2px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="w-96 h-full bg-[#080d1a] border-l border-slate-800 shadow-2xl flex flex-col slide-in-right overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        className="slide-in-right"
+        style={{
+          width: 380,
+          height: '100%',
+          background: '#FFFFFF',
+          borderLeft: '1px solid #E2E8F0',
+          boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+        onClick={e => e.stopPropagation()}
       >
-        {/* Drawer Header */}
-        <div className="h-14 px-5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-[#060a12]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-              <Bell className="w-4 h-4 text-amber-400" />
+        {/* Header */}
+        <div
+          style={{
+            height: 56,
+            padding: '0 20px',
+            borderBottom: '1px solid #E2E8F0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            background: '#FFFFFF',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Bell size={15} color="#2563EB" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                Ambient Telemetry
-                <span className="w-1.5 h-1.5 rounded-full status-dot-green animate-pulse" />
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                Live Feed
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: '#10B981',
+                    display: 'inline-block',
+                  }}
+                />
               </div>
-              <div className="text-[10px] font-mono text-slate-500">
-                Redis Pub/Sub • /ws/corridor
+              <div style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'monospace' }}>
+                Redis Pub/Sub · /ws/corridor
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 7,
+              border: '1px solid #E2E8F0',
+              background: '#FFFFFF',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#64748B',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = '#F8FAFC')}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = '#FFFFFF')}
           >
-            <X className="w-4 h-4" />
+            <X size={14} />
           </button>
         </div>
 
-        {/* Filter info banner */}
-        <div className="px-5 py-2.5 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <Radio className="w-3 h-3 text-cyan-400" /> Filter: Operational Events Only
+        {/* Filter banner */}
+        <div
+          style={{
+            padding: '8px 20px',
+            background: '#F8FAFC',
+            borderBottom: '1px solid #E2E8F0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 10.5,
+            color: '#94A3B8',
+            fontFamily: 'monospace',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Radio size={11} color="#2563EB" /> Operational events only
           </span>
-          <span className="text-cyan-400 font-bold">{opNotifs.length} events</span>
+          <span style={{ color: '#2563EB', fontWeight: 700 }}>{opNotifs.length} events</span>
         </div>
 
-        {/* Notifications list */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 p-2">
+        {/* Notifications */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opNotifs.length === 0 ? (
-            <div className="h-48 flex flex-col items-center justify-center text-center p-6 text-slate-500">
-              <Activity className="w-8 h-8 text-slate-700 mb-2" />
-              <div className="text-xs font-medium text-slate-400">No operational alerts yet</div>
-              <div className="text-[10px] text-slate-600 mt-1">
+            <div
+              style={{
+                height: 200,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                gap: 8,
+              }}
+            >
+              <Activity size={28} color="#CBD5E1" />
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: '#94A3B8' }}>No operational alerts yet</div>
+              <div style={{ fontSize: 11, color: '#CBD5E1', maxWidth: 220 }}>
                 Breaker trips, token locks, and invariant dispatches will stream here live.
               </div>
             </div>
@@ -76,25 +159,74 @@ export const TelemetryBellDrawer: React.FC<TelemetryBellDrawerProps> = ({
               return (
                 <div
                   key={idx}
-                  className="p-3 rounded-lg hover:bg-slate-800/40 transition-colors space-y-1.5"
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #E2E8F0',
+                    background: '#FFFFFF',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = '#F8FAFC')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = '#FFFFFF')}
                 >
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="flex items-center gap-1.5 text-slate-400">
-                      <Clock className="w-3 h-3 text-cyan-500 shrink-0" />
-                      Live Feed
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 5,
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      color: '#94A3B8',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Clock size={10} color="#2563EB" /> Live
                     </span>
                     {isTrip && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-red-950/80 border border-red-500/40 text-red-300 font-bold flex items-center gap-1">
-                        <AlertTriangle className="w-2.5 h-2.5" /> OHE TRIP
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: 4,
+                          fontSize: 9,
+                          background: '#FEF2F2',
+                          border: '1px solid #FECACA',
+                          color: '#DC2626',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}
+                      >
+                        <AlertTriangle size={9} /> OHE TRIP
                       </span>
                     )}
-                    {isLock && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-950/80 border border-purple-500/40 text-purple-300 font-bold">
+                    {isLock && !isTrip && (
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: 4,
+                          fontSize: 9,
+                          background: '#EFF6FF',
+                          border: '1px solid #BFDBFE',
+                          color: '#2563EB',
+                          fontWeight: 700,
+                        }}
+                      >
                         INTERLOCK
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] font-mono text-slate-200 leading-relaxed break-words">
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontFamily: 'JetBrains Mono, monospace',
+                      color: '#374151',
+                      lineHeight: 1.6,
+                      wordBreak: 'break-words',
+                      margin: 0,
+                    }}
+                  >
                     {item}
                   </p>
                 </div>
@@ -104,8 +236,18 @@ export const TelemetryBellDrawer: React.FC<TelemetryBellDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-800/60 bg-[#060a12] text-center text-[10px] font-mono text-slate-600">
-          Redis 7.0 Cluster • Stream: corridor:events:v1
+        <div
+          style={{
+            padding: '10px 20px',
+            borderTop: '1px solid #E2E8F0',
+            background: '#F8FAFC',
+            textAlign: 'center',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            color: '#94A3B8',
+          }}
+        >
+          Redis 7.0 Cluster · Stream: corridor:events:v1
         </div>
       </div>
     </div>

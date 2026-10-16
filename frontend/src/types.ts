@@ -20,7 +20,9 @@ export type Department =
   | 'OHE'
   | 'CIVIL_P_WAY'
   | 'S_AND_T'
-  | 'MECHANICAL_CW';
+  | 'MECHANICAL_CW'
+  | 'SAFETY'
+  | 'COMMERCIAL';
 
 export type ApprovalRole =
   | 'TPC'
@@ -72,6 +74,46 @@ export interface InvariantSummary {
   conflict_free: boolean;
 }
 
+export interface FieldPhotoProof {
+  photo_url: string;
+  lat: number;
+  lng: number;
+  km_chainage: string;
+  uploaded_at: string;
+  accuracy_meters: number;
+  geofence_verified: boolean;
+  gang_supervisor: string;
+  crew_count: number;
+}
+
+export interface PiggybackedDepartment {
+  id: string;
+  department: Department | string;
+  work_description: string;
+  supervisor_id: string;
+  crew_size: number;
+  joined_at: string;
+}
+
+export interface StationMasterActions {
+  power_cut_granted: boolean;
+  power_cut_granted_at?: string;
+  traffic_block_granted: boolean;
+  traffic_block_granted_at?: string;
+  points_clamped_confirmed: boolean;
+  points_clamped_at?: string;
+}
+
+export interface DigitalPermitMemo {
+  permit_number: string;
+  issued_by: string;
+  station: string;
+  issued_at: string;
+  valid_until: string;
+  delivered_to_mobile: boolean;
+  acknowledged_by_field: boolean;
+}
+
 export interface OperationalEvent {
   id: string;
   division: string;
@@ -94,6 +136,10 @@ export interface OperationalEvent {
   lock_info?: any;
   created_at: string;
   updated_at: string;
+  field_photo?: FieldPhotoProof;
+  piggybacked_depts?: PiggybackedDepartment[];
+  station_actions?: StationMasterActions;
+  digital_permit?: DigitalPermitMemo;
 }
 
 export interface AuditLeaf {

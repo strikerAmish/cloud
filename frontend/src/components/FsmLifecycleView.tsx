@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import {
   Workflow,
-  Lock,
-  Unlock,
-  AlertOctagon,
-  Flame,
   CheckCircle2,
   Clock,
-  ArrowRight,
-  ShieldCheck,
+  Lock,
+  Flame,
   ShieldAlert,
-  Radio,
-  FileCheck2,
+  AlertOctagon,
+  ShieldCheck,
   Database
 } from 'lucide-react';
 import { OperationalEvent, EventStatus } from '../types';
@@ -22,18 +18,19 @@ interface FsmLifecycleViewProps {
   onRefresh: () => void;
 }
 
+// Blue-to-Green progression: Draft/Submitted/Awaiting = Grey/Blue, Approved/Active/Done/Cleared/Audit = Emerald Green
 const FSM_STAGES: Array<{ num: number; key: EventStatus; name: string; color: string; desc: string }> = [
-  { num: 1, key: 'DRAFT', name: 'Draft', color: '#718096', desc: 'Initial requisition drafted. No live corridor state altered.' },
-  { num: 2, key: 'SUBMITTED', name: 'Submitted', color: '#3182CE', desc: 'Pydantic validation passed. ACTM & G&SR rules checked.' },
-  { num: 3, key: 'DEPENDENCY_RESOLVED', name: 'Dependency Resolved', color: '#2B6CB0', desc: 'Topological track graph analyzed. 6 Invariants resolved.' },
-  { num: 4, key: 'AWAITING_APPROVAL', name: 'Awaiting Approval', color: '#DD6B20', desc: 'Concurrent payloads dispatched to TPC & Section Controller.' },
-  { num: 5, key: 'APPROVED', name: 'Approved', color: '#4C51BF', desc: 'Dual-key statutory sign-offs executed via cryptographic signatures.' },
-  { num: 6, key: 'SCHEDULED', name: 'Fenced Token Locked', color: '#805AD5', desc: 'Redis distributed fencing token acquired. Corridor reserved.' },
-  { num: 7, key: 'ACTIVE_IN_PROGRESS', name: 'Active In Progress', color: '#38A169', desc: 'SM points clamped; 25kV de-energized (ETR-1); earth rods applied (ETR-3).' },
-  { num: 8, key: 'WORK_COMPLETED', name: 'Work Completed', color: '#D69E2E', desc: 'Maintenance finished. Earth rods removed. Memo signed.' },
-  { num: 9, key: 'SAFETY_VERIFIED', name: 'Safety Verified', color: '#319795', desc: 'Joint safety clearance verified (Overhead, points, interlocks).' },
-  { num: 10, key: 'BLOCK_CLEARED', name: 'Block Cleared', color: '#00A3C4', desc: '25kV re-energized; point clamps removed; traffic resumed.' },
-  { num: 11, key: 'AUDIT_LOCKED', name: 'Audit Locked', color: '#1A365D', desc: 'SHA-256 Merkle block permanently sealed into S3 WORM storage.' },
+  { num: 1, key: 'DRAFT', name: 'Draft', color: '#64748B', desc: 'Initial requisition drafted. No live corridor state altered.' },
+  { num: 2, key: 'SUBMITTED', name: 'Submitted', color: '#3B82F6', desc: 'Pydantic validation passed. ACTM & G&SR rules checked.' },
+  { num: 3, key: 'DEPENDENCY_RESOLVED', name: 'Dependency Resolved', color: '#2563EB', desc: 'Topological track graph analyzed. 6 Invariants resolved.' },
+  { num: 4, key: 'AWAITING_APPROVAL', name: 'Awaiting Approval', color: '#0EA5E9', desc: 'Concurrent payloads dispatched to TPC & Section Controller.' },
+  { num: 5, key: 'APPROVED', name: 'Approved', color: '#10B981', desc: 'Dual-key statutory sign-offs executed via cryptographic signatures.' },
+  { num: 6, key: 'SCHEDULED', name: 'Fenced Token Locked', color: '#059669', desc: 'Redis distributed fencing token acquired. Corridor reserved.' },
+  { num: 7, key: 'ACTIVE_IN_PROGRESS', name: 'Active In Progress', color: '#16A34A', desc: 'SM points clamped; 25kV de-energized (ETR-1); earth rods applied (ETR-3).' },
+  { num: 8, key: 'WORK_COMPLETED', name: 'Work Completed', color: '#047857', desc: 'Maintenance finished. Earth rods removed. Memo signed.' },
+  { num: 9, key: 'SAFETY_VERIFIED', name: 'Safety Verified', color: '#059669', desc: 'Joint safety clearance verified (Overhead, points, interlocks).' },
+  { num: 10, key: 'BLOCK_CLEARED', name: 'Block Cleared', color: '#10B981', desc: '25kV re-energized; point clamps removed; traffic resumed.' },
+  { num: 11, key: 'AUDIT_LOCKED', name: 'Audit Locked', color: '#065F46', desc: 'SHA-256 Merkle block permanently sealed into S3 WORM storage.' },
 ];
 
 export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRefresh }) => {
@@ -42,8 +39,8 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   if (!event) {
     return (
-      <div className="p-8 text-center text-slate-400 bg-slate-900 border border-slate-800 rounded-xl">
-        No Operational Event selected. Select an event from the Corridor Video Wall or create a new requisition.
+      <div className="p-8 text-center text-slate-400 bg-[#12161f] border border-slate-800 rounded-xl neo-card">
+        Select an operational event to inspect its 11-stage Finite State Machine lifecycle.
       </div>
     );
   }
@@ -59,7 +56,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
       setActionMsg(res.message);
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Lock Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -67,12 +64,13 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   const handleActivate = async () => {
     setLoading(true);
+    setActionMsg(null);
     try {
       await activateWork(event.id);
-      setActionMsg('Work activated! 25kV power tripped & Permit ETR-3 active.');
+      setActionMsg('Work activated. 25kV Catenary tripped & ETR-3 active.');
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Activation Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -80,12 +78,13 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   const handleComplete = async () => {
     setLoading(true);
+    setActionMsg(null);
     try {
       await completeWork(event.id, 'SSE_OHE_WDA_04');
-      setActionMsg('Work completion memo signed. Earth discharge rods removed.');
+      setActionMsg('Work completed memo signed by Field Supervisor.');
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -93,27 +92,29 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   const handleClear = async () => {
     setLoading(true);
+    setActionMsg(null);
     try {
       const res = await clearBlock(event.id);
       setActionMsg(res.message);
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Clear Block Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAbort = async () => {
-    const reason = prompt('Enter statutory reason for Emergency Safety Abort:', 'Track circuit shunt detected on Up Main');
+    const reason = prompt('Enter statutory reason for Emergency Safety Abort:', 'Track circuit failure / unauthorized rail occupancy');
     if (!reason) return;
     setLoading(true);
+    setActionMsg(null);
     try {
       const res = await emergencyAbort(event.id, 'CTRL_SEC_WDA_02', reason);
       setActionMsg(res.message);
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Abort Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -121,12 +122,13 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   const handleEscalate = async () => {
     setLoading(true);
+    setActionMsg(null);
     try {
-      const res = await escalateSla(event.id, 'TPC response timer exceeded 15 minutes');
-      setActionMsg(`Alert Escalated to ${res.escalated_to.join(', ')}`);
+      const res = await escalateSla(event.id, 'Timeout exceeding statutory SLA matrix');
+      setActionMsg(`Escalated to: ${res.escalated_to?.join(', ')}`);
       onRefresh();
     } catch (err: any) {
-      setActionMsg(`Escalate Error: ${err.message}`);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -134,18 +136,18 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
   return (
     <div className="space-y-6">
-      {/* Event Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
+      {/* Top Banner */}
+      <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4 neo-card">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold bg-slate-800 text-cyan-400 px-2.5 py-0.5 rounded border border-slate-700">
-              {event.id}
+            <span className="text-xs font-mono font-bold bg-blue-950 text-blue-300 px-2.5 py-0.5 rounded border border-blue-500/40">
+              SCREEN 3 • 11-STAGE FSM PIPELINE
             </span>
             <span
-              className="text-xs font-mono font-bold text-white px-2.5 py-0.5 rounded shadow-sm"
-              style={{ backgroundColor: event.status_color || '#3182CE' }}
+              className="text-xs font-mono font-bold px-2.5 py-0.5 rounded text-white"
+              style={{ backgroundColor: event.status_color || '#3B82F6' }}
             >
-              Stage {event.fsm_stage}: {event.status}
+              Stage 0{event.fsm_stage}: {event.status}
             </span>
           </div>
           <h2 className="text-lg font-bold text-white">{event.description}</h2>
@@ -156,30 +158,30 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
         {/* Fencing Token Badge */}
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-slate-950 border border-purple-500/40 text-right">
-            <div className="text-[10px] font-mono text-purple-400 uppercase tracking-wider">
+          <div className="p-3 rounded-xl bg-slate-950 border border-blue-500/40 text-right neo-pressed">
+            <div className="text-[10px] font-mono text-blue-400 uppercase tracking-wider">
               Distributed Fencing Token
             </div>
-            <div className="text-base font-black font-mono text-purple-300">
+            <div className="text-base font-black font-mono text-blue-300">
               {event.fencing_token ? `FT-2026-10-14-${event.fencing_token.toString().padStart(4, '0')}` : 'UNLOCKED'}
             </div>
-            <div className="text-[10px] text-slate-400">Redis Monotonic 64-bit Lock</div>
+            <div className="text-[10px] text-slate-500">Redis Monotonic 64-bit Lock</div>
           </div>
         </div>
       </div>
 
       {actionMsg && (
-        <div className="p-3.5 rounded-lg bg-cyan-950/80 border border-cyan-500/60 text-xs font-mono text-cyan-200 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+        <div className="p-3.5 rounded-lg bg-blue-950/60 border border-blue-500/40 text-xs font-mono text-blue-200 flex items-center gap-2 neo-card">
+          <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
           <span>{actionMsg}</span>
         </div>
       )}
 
       {/* 11-Stage Interactive FSM Visual Pipeline */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+      <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-xl neo-card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-sm text-white flex items-center gap-2">
-            <Workflow className="w-4 h-4 text-cyan-400" />
+            <Workflow className="w-4 h-4 text-blue-400" />
             11-Stage Finite State Machine (FSM) Lifecycle Progress
           </h3>
           <span className="text-xs font-mono text-slate-400">Strict Railway Manual Sequence (G&SR / ACTM)</span>
@@ -195,7 +197,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
                 key={stage.key}
                 className={`p-3.5 rounded-xl border transition-all ${
                   isCurrent
-                    ? 'bg-slate-950 border-cyan-400 ring-2 ring-cyan-500/30 shadow-lg'
+                    ? 'bg-slate-950 border-blue-400 ring-2 ring-blue-500/30 shadow-lg'
                     : isCompleted
                     ? 'bg-slate-950/90 border-slate-700/80'
                     : 'bg-slate-950/40 border-slate-800 opacity-60'
@@ -211,7 +213,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
                   {isCompleted ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   ) : isCurrent ? (
-                    <Clock className="w-4 h-4 text-cyan-400 animate-spin" />
+                    <Clock className="w-4 h-4 text-blue-400 animate-spin" />
                   ) : (
                     <span className="w-2 h-2 rounded-full bg-slate-700" />
                   )}
@@ -225,13 +227,13 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
 
         {/* Exception State Banner if active */}
         {isException && (
-          <div className="mt-4 p-4 rounded-xl bg-red-950/80 border border-red-500 text-red-200 flex items-center justify-between">
+          <div className="mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 flex items-center justify-between neo-pressed">
             <div className="flex items-center gap-3">
-              <AlertOctagon className="w-6 h-6 text-red-400 animate-pulse" />
+              <AlertOctagon className="w-6 h-6 text-slate-400" />
               <div>
                 <div className="font-bold text-sm">SAFETY INTERRUPT / EXCEPTION ACTIVE: {event.status}</div>
-                <div className="text-xs text-red-300">
-                  Corridor possession frozen. Emergency audio-visual alerts dispatched to DRM & Section Controllers.
+                <div className="text-xs text-slate-400">
+                  Corridor possession frozen. Emergency alerts dispatched to DRM & Section Controllers.
                 </div>
               </div>
             </div>
@@ -240,7 +242,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
       </div>
 
       {/* Operational Actions & Safety Controls */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+      <div className="bg-[#12161f] border border-slate-800 rounded-xl p-5 shadow-xl neo-card">
         <h3 className="font-bold text-sm text-white mb-3 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           FSM State Transition Actions & Emergency Safeguards
@@ -252,7 +254,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
             <button
               onClick={handleAcquireLock}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg shadow-md shadow-purple-600/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-md shadow-blue-600/30 cursor-pointer neo-button"
             >
               <Lock className="w-4 h-4" />
               Acquire Redis Fencing Token (Stage 6)
@@ -264,7 +266,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
             <button
               onClick={handleActivate}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md shadow-emerald-600/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md shadow-emerald-600/30 cursor-pointer neo-button"
             >
               <Flame className="w-4 h-4" />
               Activate Work in Progress (Stage 7)
@@ -276,7 +278,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
             <button
               onClick={handleComplete}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow-md shadow-amber-600/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md shadow-emerald-600/30 cursor-pointer neo-button"
             >
               <CheckCircle2 className="w-4 h-4" />
               Sign Work Completion Memo (Stage 8)
@@ -288,21 +290,21 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
             <button
               onClick={handleClear}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg shadow-md shadow-cyan-600/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-md shadow-emerald-700/30 cursor-pointer neo-button"
             >
               <Database className="w-4 h-4" />
               Clear Block & Seal S3 WORM Ledger (Stage 10/11)
             </button>
           )}
 
-          {/* Emergency Safety Abort */}
+          {/* Emergency Safety Abort (Professional Dark Grey Button with White/Blue border) */}
           {!['BLOCK_CLEARED', 'AUDIT_LOCKED', 'ABORTED_SAFETY_LOCK'].includes(event.status) && (
             <button
               onClick={handleAbort}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg shadow-md shadow-red-700/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold rounded-lg border border-blue-500/40 hover:border-blue-400 cursor-pointer neo-button"
             >
-              <AlertOctagon className="w-4 h-4" />
+              <AlertOctagon className="w-4 h-4 text-blue-400" />
               Emergency Safety Abort (Hard Fail-Safe)
             </button>
           )}
@@ -312,90 +314,14 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
             <button
               onClick={handleEscalate}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-bold rounded-lg cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-lg cursor-pointer neo-button"
             >
-              <ShieldAlert className="w-4 h-4" />
+              <ShieldAlert className="w-4 h-4 text-blue-400" />
               Escalate SLA to Sr. DOM / DRM
             </button>
           )}
         </div>
       </div>
-
-      {/* 6-Invariant Automated Resolution Card */}
-      {event.invariants && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-cyan-400" />
-              The Six Invariants of Operational Awareness (Resolved Automatically)
-            </h3>
-            <span className="text-xs px-2.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono">
-              ✓ CONFLICT-FREE GUARANTEED
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-mono">
-            {/* Invariant 1 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">1. Ambient Corridor Awareness</div>
-              <ul className="text-slate-300 space-y-1 text-[11px]">
-                {event.invariants.invariant_1_ambient_awareness.map((a, i) => (
-                  <li key={i}>• {a.role}: {a.action}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Invariant 2 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">2. Statutory Approval Authority</div>
-              <ul className="text-slate-300 space-y-1 text-[11px]">
-                {event.invariants.invariant_2_statutory_approvers.map((a, i) => (
-                  <li key={i}>• {a.role} ({a.department}) — {a.authority_code}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Invariant 3 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">3. Physical Prerequisites</div>
-              <ul className="text-slate-300 space-y-1 text-[11px]">
-                {event.invariants.invariant_3_physical_prerequisites.map((p, i) => (
-                  <li key={i}>• [{p.code}] {p.action}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Invariant 4 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">4. Passive Telemetry Monitoring</div>
-              <ul className="text-slate-300 space-y-1 text-[11px]">
-                {event.invariants.invariant_4_passive_monitoring.map((m, i) => (
-                  <li key={i}>• {m.desk}: {m.mode}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Invariant 5 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">5. Operational Site Custody</div>
-              <div className="text-slate-300 text-[11px]">
-                {event.invariants.invariant_5_site_custody.title} ({event.invariants.invariant_5_site_custody.officer_id})
-                <div className="text-slate-400 text-[10px] mt-0.5">{event.invariants.invariant_5_site_custody.statutory_role}</div>
-              </div>
-            </div>
-
-            {/* Invariant 6 */}
-            <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-cyan-400 font-bold mb-1">6. Hierarchical SLA Escalation</div>
-              <ul className="text-slate-300 space-y-1 text-[11px]">
-                {event.invariants.invariant_6_sla_escalation.map((e, i) => (
-                  <li key={i}>• &gt;{e.threshold_minutes} min: {e.escalate_to}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
