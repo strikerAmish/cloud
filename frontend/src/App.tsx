@@ -5,13 +5,14 @@ import { MiddleColumn }      from './components/MiddleColumn';
 import { RightActionPane }   from './components/RightActionPane';
 import { AuditLedgerView }   from './components/AuditLedgerView';
 import { OverviewDashboard } from './components/OverviewDashboard';
+import { ChaosSreDashboard } from './components/ChaosSreDashboard';
 import { LoginView }         from './components/LoginView';
 import { RequisitionModal }  from './components/RequisitionModal';
 import { fetchEvents, fetchHealth, getOrCreateTraceparent } from './api';
 import { OperationalEvent }  from './types';
 import { INITIAL_OPERATIONAL_EVENTS, eventMatchesSection } from './data/corridorData';
 
-export type View = 'workspace' | 'audit' | 'overview';
+export type View = 'workspace' | 'audit' | 'overview' | 'chaos';
 
 export function App() {
   const [isAuthenticated,   setIsAuthenticated]   = useState(false);
@@ -27,15 +28,16 @@ export function App() {
   const [activeTab,         setActiveTab]         = useState(1); // 1 = Pending Approvals
   const [selectedSectionId, setSelectedSectionId] = useState('ALL');
   const [selectedDept,      setSelectedDept]      = useState('ALL');
+  const [searchQuery,       setSearchQuery]       = useState('');
   const [isModalOpen,       setIsModalOpen]       = useState(false);
   const [wsConnected,       setWsConnected]       = useState(false);
   const [canaryHealthy,     setCanaryHealthy]     = useState(true);
   const [isOfflineMode,     setIsOfflineMode]     = useState(false);
   const [ambientNotifs,     setAmbientNotifs]     = useState<string[]>([
-    '23:05:12Z [TPC-NGP]: Circuit breaker trip telemetry verified at Feeding Post FP-04 (Wardha TSS).',
-    '23:04:45Z [SM-WDA]: Physical point clamp #14A padlocked. Reverse route locked against Up Main.',
+    '23:05:12Z [TPC-DDU]: Circuit breaker trip telemetry verified at Feeding Post FP-02 (Danapur TSS).',
+    '23:04:45Z [SM-PNBE]: Physical point clamp #14A padlocked. Reverse route locked against Up Main at Patna Jn.',
     '23:02:18Z [GSR-INVARIANT]: 6 Invariants evaluated. Dual-key approval matrix dispatched.',
-    '23:00:00Z [COA-FOIS]: Section Controller pacing freight rake N/BOXNHL-243 via Down Main at TSR 30 km/h.',
+    '23:00:00Z [COA-FOIS]: Danapur Section Controller pacing freight rake N/BOXNHL-243 via Down Main at TSR 30 km/h.',
   ]);
 
   // ── Load events from backend & merge with corridor dataset ──
@@ -125,10 +127,19 @@ export function App() {
     }
   }, [selectedSectionId, events]);
 
-  // ── Handle local signing action to immediately reflect in state ──
+  // ── Handle local signing and FSM stage transition to immediately reflect in state ──
   const handleLocalSign = (updatedEvent: OperationalEvent) => {
     setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
     setSelectedEvent(updatedEvent);
+
+    // Auto-navigate tab to follow the event as work progresses
+    if (updatedEvent.fsm_stage === 6 && activeTab !== 0) {
+      setActiveTab(0); // Switch to Ongoing Work
+    } else if (updatedEvent.fsm_stage === 7 && activeTab !== 2) {
+      setActiveTab(2); // Switch to History
+    } else if (updatedEvent.fsm_stage <= 5 && activeTab === 2) {
+      setActiveTab(1); // Switch to Pending Approvals
+    }
   };
 
   if (!isAuthenticated) {
@@ -181,6 +192,9 @@ export function App() {
           selectedSectionId={selectedSectionId}
           onSelectSection={setSelectedSectionId}
           onLogout={() => setIsAuthenticated(false)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenNewRequisition={() => setIsModalOpen(true)}
         />
 
         {/* ── Active View Rendering ──────────────────── */}
@@ -204,12 +218,14 @@ export function App() {
               onSelectSection={setSelectedSectionId}
               selectedDept={selectedDept}
               onSelectDept={setSelectedDept}
+              searchQuery={searchQuery}
             />
 
             {/* Right Action Pane — Detailed Review, Authorizations & Seal */}
             <RightActionPane
               event={selectedEvent}
               onRefresh={loadEvents}
+              onUpdateEvent={handleLocalSign}
               onNavigateAudit={() => setActiveView('audit')}
               isHistoryTab={activeTab === 2}
             />
@@ -230,6 +246,12 @@ export function App() {
                 setActiveView('workspace');
               }}
             />
+          </div>
+        )}
+
+        {activeView === 'chaos' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: '#0F172A' }}>
+            <ChaosSreDashboard />
           </div>
         )}
       </div>

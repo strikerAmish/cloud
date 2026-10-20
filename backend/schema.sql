@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS event_stakeholders (
 CREATE TABLE IF NOT EXISTS statutory_permits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES operational_events(id) ON DELETE CASCADE,
-    permit_type VARCHAR(30) NOT NULL, -- ETR_1, ETR_3, RECONNECTION, POINT_CLAMP_MEMO
+    permit_type VARCHAR(30) NOT NULL, -- ETR_1, FORM3_PTW, ETR_3, RECONNECTION, POINT_CLAMP_MEMO, CIVIL_TRACK_BLOCK
     earthing_discharged BOOLEAN DEFAULT FALSE,
     power_tripped BOOLEAN DEFAULT FALSE,
     points_clamped BOOLEAN DEFAULT FALSE,

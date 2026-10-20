@@ -26,7 +26,7 @@ const FSM_STAGES: Array<{ num: number; key: EventStatus; name: string; color: st
   { num: 4, key: 'AWAITING_APPROVAL', name: 'Awaiting Approval', color: '#0EA5E9', desc: 'Concurrent payloads dispatched to TPC & Section Controller.' },
   { num: 5, key: 'APPROVED', name: 'Approved', color: '#10B981', desc: 'Dual-key statutory sign-offs executed via cryptographic signatures.' },
   { num: 6, key: 'SCHEDULED', name: 'Fenced Token Locked', color: '#059669', desc: 'Redis distributed fencing token acquired. Corridor reserved.' },
-  { num: 7, key: 'ACTIVE_IN_PROGRESS', name: 'Active In Progress', color: '#16A34A', desc: 'SM points clamped; 25kV de-energized (ETR-1); earth rods applied (ETR-3).' },
+  { num: 7, key: 'ACTIVE_IN_PROGRESS', name: 'Active In Progress', color: '#16A34A', desc: 'SM points clamped; 25kV de-energized (ETR-1); earth rods applied (Form3-PTW).' },
   { num: 8, key: 'WORK_COMPLETED', name: 'Work Completed', color: '#047857', desc: 'Maintenance finished. Earth rods removed. Memo signed.' },
   { num: 9, key: 'SAFETY_VERIFIED', name: 'Safety Verified', color: '#059669', desc: 'Joint safety clearance verified (Overhead, points, interlocks).' },
   { num: 10, key: 'BLOCK_CLEARED', name: 'Block Cleared', color: '#10B981', desc: '25kV re-energized; point clamps removed; traffic resumed.' },
@@ -67,7 +67,7 @@ export const FsmLifecycleView: React.FC<FsmLifecycleViewProps> = ({ event, onRef
     setActionMsg(null);
     try {
       await activateWork(event.id);
-      setActionMsg('Work activated. 25kV Catenary tripped & ETR-3 active.');
+      setActionMsg('Work activated. 25kV Catenary tripped & Form3-PTW active.');
       onRefresh();
     } catch (err: any) {
       alert(err.message);

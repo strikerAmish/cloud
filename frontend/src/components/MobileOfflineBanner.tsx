@@ -49,7 +49,7 @@ export const MobileOfflineBanner: React.FC<MobileOfflineBannerProps> = ({ isOffl
             Hard Fail-Closed safety boundary. Offline bypass of railway interlocking is strictly forbidden.
           </p>
           <ul className="text-slate-500 text-[10px] space-y-0.5 list-disc pl-4 font-mono">
-            <li>Permit ETR-3 issuance & 25kV power cut</li>
+            <li>Permit Form3-PTW issuance &amp; 25kV power cut</li>
             <li>Point clamping & interlocking line block grant</li>
             <li>Block clearance and train resumption sign-off</li>
           </ul>

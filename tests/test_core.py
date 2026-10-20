@@ -61,20 +61,30 @@ class TestRailSyncCore(unittest.TestCase):
     def test_02_dynamic_dependency_engine_6_invariants(self):
         """Validates resolution of the 6 Invariants of Operational Awareness."""
         invariants = DynamicDependencyEngine.resolve_invariants(
-            division="NGP",
-            section="Wardha-Sevagram",
+            division="DNR",
+            section="Danapur–Patna Junction",
             track_id="UP_MAIN",
-            km_start=142.10,
-            km_end=143.04,
+            km_start=544.10,
+            km_end=545.80,
             impact_vector={"catenary_25kv_power_trip": True, "absolute_traffic_block": True}
         )
         self.assertTrue(invariants["conflict_free"])
         self.assertEqual(len(invariants["invariant_2_statutory_approvers"]), 2)
         self.assertTrue(any(p["code"] == "FORM_ETR_1" for p in invariants["invariant_3_physical_prerequisites"]))
+        self.assertTrue(any(p["code"] == "Form3-PTW" for p in invariants["invariant_3_physical_prerequisites"]))
         self.assertTrue(any(p["code"] == "SWR_POINT_CLAMP" for p in invariants["invariant_3_physical_prerequisites"]))
 
     def test_03_fsm_guards(self):
         """Validates that statutory sequence rules prevent illegal state transitions."""
+        # 7-Stage operational lifecycle check
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.DRAFT), 1)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.SUBMITTED), 2)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.DEPENDENCY_RESOLVED), 3)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.AWAITING_APPROVAL), 4)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.APPROVED), 5)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.ACTIVE_IN_PROGRESS), 6)
+        self.assertEqual(RailwayFSM.get_stage_number(EventStatus.BLOCK_CLEARED), 7)
+
         # Cannot transition to APPROVED without dual sign-offs
         valid, err = RailwayFSM.validate_transition(
             current_status=EventStatus.AWAITING_APPROVAL,
@@ -83,6 +93,14 @@ class TestRailSyncCore(unittest.TestCase):
         )
         self.assertFalse(valid)
         self.assertIn("Dual-Key", err)
+
+        # ACTIVE_IN_PROGRESS requires ETR-1 and Form3-PTW
+        valid_active_ok, _ = RailwayFSM.validate_transition(
+            current_status=EventStatus.SCHEDULED,
+            target_status=EventStatus.ACTIVE_IN_PROGRESS,
+            event_data={"permits": [{"permit_type": "ETR_1"}, {"permit_type": "FORM3_PTW"}]}
+        )
+        self.assertTrue(valid_active_ok)
 
         # Emergency abort can always interrupt active work
         valid_abort, _ = RailwayFSM.validate_transition(

@@ -14,12 +14,12 @@ STAGE_MAPPING: Dict[EventStatus, int] = {
     EventStatus.DEPENDENCY_RESOLVED: 3,
     EventStatus.AWAITING_APPROVAL: 4,
     EventStatus.APPROVED: 5,
-    EventStatus.SCHEDULED: 6,
-    EventStatus.ACTIVE_IN_PROGRESS: 7,
-    EventStatus.WORK_COMPLETED: 8,
-    EventStatus.SAFETY_VERIFIED: 9,
-    EventStatus.BLOCK_CLEARED: 10,
-    EventStatus.AUDIT_LOCKED: 11,
+    EventStatus.SCHEDULED: 5,
+    EventStatus.ACTIVE_IN_PROGRESS: 6,
+    EventStatus.WORK_COMPLETED: 6,
+    EventStatus.SAFETY_VERIFIED: 7,
+    EventStatus.BLOCK_CLEARED: 7,
+    EventStatus.AUDIT_LOCKED: 7,
     # Exception states mapped to negative or high indices
     EventStatus.REJECTED: 90,
     EventStatus.CANCELLED: 91,
@@ -28,17 +28,17 @@ STAGE_MAPPING: Dict[EventStatus, int] = {
 }
 
 STATUS_COLOR_MAP: Dict[EventStatus, str] = {
-    EventStatus.DRAFT: "#718096",               # Gray
-    EventStatus.SUBMITTED: "#3182CE",           # Blue
-    EventStatus.DEPENDENCY_RESOLVED: "#2B6CB0", # Darker Blue
-    EventStatus.AWAITING_APPROVAL: "#DD6B20",   # Amber
-    EventStatus.APPROVED: "#4C51BF",            # Indigo
-    EventStatus.SCHEDULED: "#805AD5",           # Purple / Fenced Token Locked
-    EventStatus.ACTIVE_IN_PROGRESS: "#38A169",  # Green
-    EventStatus.WORK_COMPLETED: "#D69E2E",      # Yellow
-    EventStatus.SAFETY_VERIFIED: "#319795",     # Teal
-    EventStatus.BLOCK_CLEARED: "#00A3C4",       # Cyan
-    EventStatus.AUDIT_LOCKED: "#1A365D",        # Dark Indigo / Immutable
+    EventStatus.DRAFT: "#64748B",               # Gray / Slate
+    EventStatus.SUBMITTED: "#64748B",           # Muted Slate
+    EventStatus.DEPENDENCY_RESOLVED: "#F59E0B", # Amber
+    EventStatus.AWAITING_APPROVAL: "#F59E0B",   # Amber
+    EventStatus.APPROVED: "#2563EB",            # Royal Blue
+    EventStatus.SCHEDULED: "#2563EB",           # Royal Blue
+    EventStatus.ACTIVE_IN_PROGRESS: "#DC2626",  # Red (Active on Track)
+    EventStatus.WORK_COMPLETED: "#DC2626",      # Red
+    EventStatus.SAFETY_VERIFIED: "#16A34A",     # Green (Normalized)
+    EventStatus.BLOCK_CLEARED: "#16A34A",       # Green (Normalized)
+    EventStatus.AUDIT_LOCKED: "#16A34A",        # Green (Normalized)
     EventStatus.REJECTED: "#E53E3E",            # Red
     EventStatus.CANCELLED: "#718096",           # Muted Gray
     EventStatus.ESCALATED_SLA: "#9B2C2C",       # Dark Red
@@ -113,8 +113,8 @@ class RailwayFSM:
         if target_status == EventStatus.ACTIVE_IN_PROGRESS:
             permits = event_data.get("permits", [])
             has_etr1 = any(p.get("permit_type") == "ETR_1" for p in permits)
-            has_etr3 = any(p.get("permit_type") == "ETR_3" for p in permits)
-            if not (has_etr1 and has_etr3):
-                return False, "Safety Prerequisite Incomplete: Active work requires Traction Isolation (ETR-1) and Field Permit-to-Work (ETR-3)."
+            has_ptw = any(p.get("permit_type") in ("FORM3_PTW", "ETR_3") for p in permits)
+            if not (has_etr1 and has_ptw):
+                return False, "Safety Prerequisite Incomplete: Active work requires Traction Isolation (ETR-1) and Field Permit-to-Work (Form3-PTW)."
 
         return True, None

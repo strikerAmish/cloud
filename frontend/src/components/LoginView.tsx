@@ -25,7 +25,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           username: 'raviamish',
           name: 'Ravi Amish',
           role: 'Station Master / Junction In-Charge',
-          station: 'Wardha Jn (WDA) & Sevagram (SEGM) Control',
+          station: 'Patna Jn (PNBE) & Danapur (DNR) Control',
         });
       } else {
         setError('Invalid Operator ID or Security PIN. Please verify your credentials or contact Division Operating Control.');
@@ -90,7 +90,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <span style={{ color: '#60A5FA' }}>Rail</span>Sync
           </div>
           <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4, letterSpacing: '0.04em' }}>
-            INDIAN RAILWAYS • CENTRAL RAILWAY (NAGPUR DIVISION)
+            INDIAN RAILWAYS • EAST CENTRAL RAILWAY (DANAPUR &amp; DDU DIVISION)
           </div>
         </div>
 

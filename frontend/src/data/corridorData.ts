@@ -10,33 +10,33 @@ export interface CorridorSectionOption {
 export const CORRIDOR_SECTIONS: CorridorSectionOption[] = [
   {
     id: 'ALL',
-    label: 'All Corridor Sections (Nagpur Division)',
+    label: 'All Corridor Sections (Patna & DDU / Danapur Division)',
     shortName: 'All Sections',
     matchPattern: ['all'],
   },
   {
-    id: 'SEGM_PUL',
-    label: 'Sevagram – Pulgaon (UP MAIN)',
-    shortName: 'Sevagram–Pulgaon',
-    matchPattern: ['pulgaon', 'segm-pul', 'sevagram–pulgaon', 'sevagram-pulgaon'],
+    id: 'DNR_PNBE',
+    label: 'Danapur – Patna Junction (UP MAIN)',
+    shortName: 'Danapur–Patna',
+    matchPattern: ['patna', 'danapur-patna', 'danapur–patna', 'dnr-pnbe', 'pnbe', 'phulwari', 'pulgaon', 'segm-pul', 'sevagram–pulgaon'],
   },
   {
-    id: 'WDA_SEGM',
-    label: 'Wardha – Sevagram (UP MAIN)',
-    shortName: 'Wardha–Sevagram',
-    matchPattern: ['wardha', 'wda-segm', 'wardha–sevagram', 'wardha-sevagram', 'wardha-sewagram'],
+    id: 'ARA_DNR',
+    label: 'Ara Junction – Danapur (UP MAIN)',
+    shortName: 'Ara–Danapur',
+    matchPattern: ['ara', 'ara-danapur', 'ara–danapur', 'ara-dnr', 'bihta', 'koilwar', 'wardha', 'wda-segm', 'wardha–sevagram'],
   },
   {
-    id: 'NGP_WDA',
-    label: 'Nagpur – Wardha (DN MAIN)',
-    shortName: 'Nagpur–Wardha',
-    matchPattern: ['nagpur-wardha', 'nagpur–wardha', 'ngp-wda'],
+    id: 'BXR_ARA',
+    label: 'Buxar – Ara Junction (UP MAIN)',
+    shortName: 'Buxar–Ara',
+    matchPattern: ['buxar', 'buxar-ara', 'buxar–ara', 'bxr-ara', 'dumraon', 'nagpur-wardha', 'nagpur–wardha', 'ngp-wda'],
   },
   {
-    id: 'NGP_SEGM',
-    label: 'Nagpur – Sevagram (UP MAIN)',
-    shortName: 'Nagpur–Sevagram',
-    matchPattern: ['nagpur-sevagram', 'nagpur–sevagram', 'ngp-segm'],
+    id: 'DDU_BXR',
+    label: 'Pt. Deen Dayal Upadhyaya – Buxar (DN MAIN)',
+    shortName: 'DDU–Buxar',
+    matchPattern: ['ddu', 'deen dayal', 'ddu-buxar', 'ddu–buxar', 'ddu-bxr', 'chandauli', 'zamania', 'nagpur-sevagram', 'nagpur–sevagram', 'ngp-segm'],
   },
 ];
 
@@ -60,11 +60,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
   // ===============================================================
   // TAB: PENDING APPROVALS (Stage 4 / Stage 3)
   // ===============================================================
-  // 1. Sevagram–Pulgaon (UP MAIN)
+  // 1. Danapur–Patna Junction (UP MAIN)
   {
     id: 'EVT-ENG-2026-00132',
-    division: 'NGP',
-    section: 'Sevagram–Pulgaon',
+    division: 'DNR',
+    section: 'Danapur–Patna Junction',
     track_id: 'UP_MAIN',
     km_start: 156.40,
     km_end: 158.20,
@@ -102,7 +102,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-ENG-2026-00132',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
       {
@@ -110,7 +110,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-ENG-2026-00132',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: '3e1b7194853641ef85smpul01',
         signed_at: '2026-10-16T10:05:00Z',
@@ -120,7 +120,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-ENG-2026-00132',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'APPROVED',
         signature_hash: '1d4ed81e997ed25519tpcngp01',
         signed_at: '2026-10-16T10:15:00Z',
@@ -135,21 +135,21 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         power_tripped: false,
         points_clamped: true,
         issued_at: '2026-10-16T10:10:00Z',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         notes: 'Points padlocked against Up Main crossover toward Sevagram',
       },
     ],
     invariants: {
       invariant_1_ambient_awareness: [
-        { role: 'Section Controller', post: 'Wardha Control', action: 'Freight pacing notice issued via COA-FOIS' },
-        { role: 'Station Master', post: 'Pulgaon Junction', action: 'Visual point clamp indicator locked' },
+        { role: 'Section Controller', post: 'Danapur Control', action: 'Freight pacing notice issued via COA-FOIS' },
+        { role: 'Station Master', post: 'Patna Junction', action: 'Visual point clamp indicator locked' },
       ],
       invariant_2_statutory_approvers: [
-        { role: 'Section Controller', department: 'OPERATING', officer_id: 'CTRL_SEC_WDA_02', authority_code: 'GSR-4.12', description: 'Dual-key traffic grant' },
-        { role: 'Station Master', department: 'OPERATING', officer_id: 'SM_PUL_01', authority_code: 'SWR-8.4', description: 'Point isolation verification' },
+        { role: 'Section Controller', department: 'OPERATING', officer_id: 'CTRL_SEC_DNR_02', authority_code: 'GSR-4.12', description: 'Dual-key traffic grant' },
+        { role: 'Station Master', department: 'OPERATING', officer_id: 'SM_PNBE_01', authority_code: 'SWR-8.4', description: 'Point isolation verification' },
       ],
       invariant_3_physical_prerequisites: [
-        { type: 'CLAMP', code: 'POINT-08B', assigned_to: 'SM_PUL_01', action: 'Mechanical clamp applied and padlocked' },
+        { type: 'CLAMP', code: 'POINT-08B', assigned_to: 'SM_PNBE_01', action: 'Mechanical clamp applied and padlocked' },
         { type: 'FLAG', code: 'BANNER-UP', assigned_to: 'SSE_PWAY_SEGM_03', action: 'Red banner flag posted at 600m' },
       ],
       invariant_4_passive_monitoring: [
@@ -205,11 +205,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     },
   },
 
-  // 2. Sevagram–Pulgaon (UP MAIN) - OHE
+  // 2. Danapur–Patna Junction (UP MAIN) - OHE
   {
     id: 'EVT-OHE-2026-00135',
-    division: 'NGP',
-    section: 'Sevagram–Pulgaon',
+    division: 'DNR',
+    section: 'Danapur–Patna Junction',
     track_id: 'UP_MAIN',
     km_start: 160.10,
     km_end: 162.00,
@@ -237,7 +237,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00135',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'PENDING',
       },
       {
@@ -245,7 +245,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00135',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
       {
@@ -253,7 +253,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00135',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: '7b9c12a4d81e997ed25519smwda',
         signed_at: '2026-10-16T10:15:00Z',
@@ -262,11 +262,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 3. Wardha–Sevagram (UP MAIN) - OHE
+  // 3. Ara–Danapur (UP MAIN) - OHE
   {
     id: 'EVT-OHE-2026-00125',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'UP_MAIN',
     km_start: 142.10,
     km_end: 143.04,
@@ -294,7 +294,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00125',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'APPROVED',
         signature_hash: '8f3ca9b12a4d81e997ed25519tpcngp01',
         signed_at: '2026-10-16T08:30:00Z',
@@ -304,7 +304,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00125',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
       {
@@ -312,7 +312,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00125',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_JCT',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: 'b12a4d81e997ed25519smwardha01',
         signed_at: '2026-10-16T08:45:00Z',
@@ -337,7 +337,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         power_tripped: true,
         points_clamped: true,
         issued_at: '2026-10-16T08:35:00Z',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         notes: '25kV Catenary Power Block Ready at FP-04 to FP-06. Awaiting Section Controller sign-off.',
       },
     ],
@@ -372,7 +372,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     digital_permit: {
       permit_number: 'PERMIT-CR-NGP-2026-00125',
       issued_by: 'Ravi Amish (SM/WDA)',
-      station: 'Wardha Junction (WDA)',
+      station: 'Danapur Junction (WDA)',
       issued_at: 'Pending Final Authorization',
       valid_until: '16:30 hrs',
       delivered_to_mobile: false,
@@ -380,11 +380,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     },
   },
 
-  // 4. Wardha–Sevagram (UP MAIN) - S&T
+  // 4. Ara–Danapur (UP MAIN) - S&T
   {
     id: 'EVT-SIG-2026-00128',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'UP_MAIN',
     km_start: 143.04,
     km_end: 143.50,
@@ -422,7 +422,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-SIG-2026-00128',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_JCT',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: 'd67a4d81e997ed25519smwda01',
         signed_at: '2026-10-16T09:00:00Z',
@@ -432,18 +432,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-SIG-2026-00128',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 5. Nagpur–Wardha (DN MAIN) - OPERATING
+  // 5. Buxar–Ara Junction (DN MAIN) - OPERATING
   {
     id: 'EVT-OPR-2026-00119',
-    division: 'NGP',
-    section: 'Nagpur–Wardha',
+    division: 'DNR',
+    section: 'Buxar–Ara Junction',
     track_id: 'DN_MAIN',
     km_start: 112.50,
     km_end: 115.00,
@@ -453,7 +453,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     requested_end: '2026-10-16T18:30:00Z',
     fencing_token: 890,
     description: 'Loop Line Turnout Realignment & Marshalling Yard Crossover Verification',
-    originator_id: 'SM_WDA_JCT',
+    originator_id: 'SM_PNBE_01',
     status_color: '#F59E0B',
     created_at: '2026-10-16T07:30:00Z',
     updated_at: '2026-10-16T08:50:00Z',
@@ -471,7 +471,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OPR-2026-00119',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_JCT',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: '9a1e81e997ed25519smwda99',
         signed_at: '2026-10-16T07:45:00Z',
@@ -481,18 +481,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OPR-2026-00119',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 6. Nagpur–Wardha (DN MAIN) - S&T
+  // 6. Buxar–Ara Junction (DN MAIN) - S&T
   {
     id: 'EVT-SIG-2026-00122',
-    division: 'NGP',
-    section: 'Nagpur–Wardha',
+    division: 'DNR',
+    section: 'Buxar–Ara Junction',
     track_id: 'DN_MAIN',
     km_start: 120.00,
     km_end: 122.80,
@@ -530,18 +530,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-SIG-2026-00122',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 7. Nagpur–Sevagram (UP MAIN) - P-Way
+  // 7. Pt. Deen Dayal Upadhyaya–Buxar (UP MAIN) - P-Way
   {
     id: 'EVT-PWY-2026-00140',
-    division: 'NGP',
-    section: 'Nagpur–Sevagram',
+    division: 'DNR',
+    section: 'Pt. Deen Dayal Upadhyaya–Buxar',
     track_id: 'UP_MAIN',
     km_start: 78.20,
     km_end: 81.00,
@@ -579,18 +579,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-PWY-2026-00140',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 8. Nagpur–Sevagram (UP MAIN) - OHE
+  // 8. Pt. Deen Dayal Upadhyaya–Buxar (UP MAIN) - OHE
   {
     id: 'EVT-OHE-2026-00144',
-    division: 'NGP',
-    section: 'Nagpur–Sevagram',
+    division: 'DNR',
+    section: 'Pt. Deen Dayal Upadhyaya–Buxar',
     track_id: 'UP_MAIN',
     km_start: 84.50,
     km_end: 86.10,
@@ -618,7 +618,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00144',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'PENDING',
       },
       {
@@ -626,18 +626,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00144',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 9. Sevagram–Pulgaon (UP MAIN) - Mechanical (C&W)
+  // 9. Danapur–Patna Junction (UP MAIN) - Mechanical (C&W)
   {
     id: 'EVT-CW-2026-00155',
-    division: 'NGP',
-    section: 'Sevagram–Pulgaon',
+    division: 'DNR',
+    section: 'Danapur–Patna Junction',
     track_id: 'UP_GOODS_LOOP',
     km_start: 153.20,
     km_end: 154.00,
@@ -686,7 +686,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-CW-2026-00155',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'PENDING',
       },
       {
@@ -694,18 +694,18 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-CW-2026-00155',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_SEGM_01',
+        officer_id: 'SM_DNR_01',
         approval_status: 'PENDING',
       },
     ],
     permits: [],
   },
 
-  // 10. Wardha–Sevagram (UP MAIN) - Safety & Security (RPF / Safety Directorate)
+  // 10. Ara–Danapur (UP MAIN) - Safety & Security (RPF / Safety Directorate)
   {
     id: 'EVT-SAF-2026-00160',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'UP_MAIN',
     km_start: 142.10,
     km_end: 144.50,
@@ -754,7 +754,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-SAF-2026-00160',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_01',
+        officer_id: 'SM_ARA_01',
         approval_status: 'PENDING',
       },
     ],
@@ -764,11 +764,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
   // ===============================================================
   // TAB: ONGOING WORK (Stage 5 / ACTIVE_IN_PROGRESS)
   // ===============================================================
-  // 9. Sevagram–Pulgaon (UP MAIN) - P-Way
+  // 9. Danapur–Patna Junction (UP MAIN) - P-Way
   {
     id: 'EVT-ENG-2026-00109',
-    division: 'NGP',
-    section: 'Sevagram–Pulgaon',
+    division: 'DNR',
+    section: 'Danapur–Patna Junction',
     track_id: 'UP_MAIN',
     km_start: 154.00,
     km_end: 156.00,
@@ -806,7 +806,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-ENG-2026-00109',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'APPROVED',
         signature_hash: '6b3d81e997ed25519ctrlwda885',
         signed_at: '2026-10-16T10:55:00Z',
@@ -816,7 +816,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-ENG-2026-00109',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: '7c4e81e997ed25519smpul885',
         signed_at: '2026-10-16T11:00:00Z',
@@ -831,17 +831,17 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         power_tripped: false,
         points_clamped: true,
         issued_at: '2026-10-16T11:02:00Z',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         notes: 'Track block granted. Up Main isolated. Red flags posted.',
       },
     ],
   },
 
-  // 10. Wardha–Sevagram (UP MAIN) - OHE
+  // 10. Ara–Danapur (UP MAIN) - OHE
   {
     id: 'EVT-OHE-2026-00104',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'UP_MAIN',
     km_start: 141.20,
     km_end: 142.00,
@@ -850,7 +850,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     requested_start: '2026-10-16T11:30:00Z',
     requested_end: '2026-10-16T14:30:00Z',
     fencing_token: 884,
-    description: 'Emergency Catenary Contact Wire Splicing (Permit ETR-3 Active • Earthing Grounded)',
+    description: 'Emergency Catenary Contact Wire Splicing (Permit Form3-PTW Active • Earthing Grounded)',
     originator_id: 'SSE_OHE_WDA_04',
     status_color: '#3B82F6',
     created_at: '2026-10-16T06:30:00Z',
@@ -869,7 +869,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00104',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'APPROVED',
         signature_hash: '8a1c81e997ed25519tpc884',
         signed_at: '2026-10-16T11:25:00Z',
@@ -879,7 +879,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00104',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'APPROVED',
         signature_hash: '9b2d81e997ed25519ctrl884',
         signed_at: '2026-10-16T11:28:00Z',
@@ -889,7 +889,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-OHE-2026-00104',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_JCT',
+        officer_id: 'SM_PNBE_01',
         approval_status: 'APPROVED',
         signature_hash: 'ac3e81e997ed25519sm884',
         signed_at: '2026-10-16T11:30:00Z',
@@ -899,22 +899,22 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
       {
         id: 'p-ong-wda-1',
         event_id: 'EVT-OHE-2026-00104',
-        permit_type: 'ETR_3',
+        permit_type: 'FORM3_PTW',
         earthing_discharged: true,
         power_tripped: true,
         points_clamped: true,
         issued_at: '2026-10-16T11:32:00Z',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         notes: '25kV power cut confirmed at FP-04. 2 earth discharge rods locked.',
       },
     ],
   },
 
-  // 11. Nagpur–Wardha (DN MAIN) - S&T
+  // 11. Buxar–Ara Junction (DN MAIN) - S&T
   {
     id: 'EVT-SIG-2026-00114',
-    division: 'NGP',
-    section: 'Nagpur–Wardha',
+    division: 'DNR',
+    section: 'Buxar–Ara Junction',
     track_id: 'DN_MAIN',
     km_start: 118.00,
     km_end: 119.50,
@@ -952,7 +952,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-SIG-2026-00114',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'APPROVED',
         signature_hash: '2b3c81e997ed25519ctrl887',
         signed_at: '2026-10-16T11:58:00Z',
@@ -961,11 +961,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 12. Nagpur–Sevagram (UP MAIN) - P-Way
+  // 12. Pt. Deen Dayal Upadhyaya–Buxar (UP MAIN) - P-Way
   {
     id: 'EVT-PWY-2026-00116',
-    division: 'NGP',
-    section: 'Nagpur–Sevagram',
+    division: 'DNR',
+    section: 'Pt. Deen Dayal Upadhyaya–Buxar',
     track_id: 'UP_MAIN',
     km_start: 72.00,
     km_end: 74.50,
@@ -1003,7 +1003,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-PWY-2026-00116',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'APPROVED',
         signature_hash: '4d5e81e997ed25519ctrl886',
         signed_at: '2026-10-16T10:25:00Z',
@@ -1015,11 +1015,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
   // ===============================================================
   // TAB: MONTH'S HISTORY (Stage 7 / BLOCK_CLEARED / AUDIT_LOCKED)
   // ===============================================================
-  // 13. Sevagram–Pulgaon (UP MAIN)
+  // 13. Danapur–Patna Junction (UP MAIN)
   {
     id: 'EVT-HIST-2026-00082',
-    division: 'NGP',
-    section: 'Sevagram–Pulgaon',
+    division: 'DNR',
+    section: 'Danapur–Patna Junction',
     track_id: 'UP_MAIN',
     km_start: 152.00,
     km_end: 155.00,
@@ -1057,7 +1057,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-HIST-2026-00082',
         department: 'OPERATING',
         role: 'SECTION_CONTROLLER',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         approval_status: 'APPROVED',
         signature_hash: 'b12a4d81e997ed25519ctrlhist860',
         signed_at: '2026-10-12T18:28:00Z',
@@ -1066,11 +1066,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 14. Wardha–Sevagram (UP MAIN)
+  // 14. Ara–Danapur (UP MAIN)
   {
     id: 'EVT-HIST-2026-00088',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'UP_MAIN',
     km_start: 142.10,
     km_end: 144.00,
@@ -1098,7 +1098,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-HIST-2026-00088',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'APPROVED',
         signature_hash: 'd8f3ca9b12a4d81e997ed255198f3ca9b12a4d81e997ed25519b12a4d81e997e',
         signed_at: '2026-10-10T04:10:00Z',
@@ -1107,11 +1107,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 15. Nagpur–Wardha (DN MAIN)
+  // 15. Buxar–Ara Junction (DN MAIN)
   {
     id: 'EVT-HIST-2026-00075',
-    division: 'NGP',
-    section: 'Nagpur–Wardha',
+    division: 'DNR',
+    section: 'Buxar–Ara Junction',
     track_id: 'DN_MAIN',
     km_start: 110.00,
     km_end: 112.00,
@@ -1148,11 +1148,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 16. Nagpur–Sevagram (UP MAIN)
+  // 16. Pt. Deen Dayal Upadhyaya–Buxar (UP MAIN)
   {
     id: 'EVT-HIST-2026-00069',
-    division: 'NGP',
-    section: 'Nagpur–Sevagram',
+    division: 'DNR',
+    section: 'Pt. Deen Dayal Upadhyaya–Buxar',
     track_id: 'UP_MAIN',
     km_start: 80.00,
     km_end: 82.50,
@@ -1180,7 +1180,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-HIST-2026-00069',
         department: 'OHE',
         role: 'TPC',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         approval_status: 'APPROVED',
         signature_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         signed_at: '2026-10-04T07:40:00Z',
@@ -1189,11 +1189,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 17. Wardha Junction Siding - Mechanical (C&W) Historical
+  // 17. Danapur Junction Siding - Mechanical (C&W) Historical
   {
     id: 'EVT-HIST-2026-00062',
-    division: 'NGP',
-    section: 'Wardha–Sevagram',
+    division: 'DNR',
+    section: 'Ara–Danapur',
     track_id: 'DOWN_LOOP',
     km_start: 141.50,
     km_end: 142.20,
@@ -1231,7 +1231,7 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
         event_id: 'EVT-HIST-2026-00062',
         department: 'OPERATING',
         role: 'STATION_MASTER',
-        officer_id: 'SM_WDA_01',
+        officer_id: 'SM_ARA_01',
         approval_status: 'APPROVED',
         signature_hash: '7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0',
         signed_at: '2026-10-02T11:35:00Z',
@@ -1240,11 +1240,11 @@ export const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     permits: [],
   },
 
-  // 18. Nagpur–Wardha (DN MAIN) - Safety Directorate Historical
+  // 18. Buxar–Ara Junction (DN MAIN) - Safety Directorate Historical
   {
     id: 'EVT-HIST-2026-00058',
-    division: 'NGP',
-    section: 'Nagpur–Wardha',
+    division: 'DNR',
+    section: 'Buxar–Ara Junction',
     track_id: 'DN_MAIN',
     km_start: 115.00,
     km_end: 119.50,
@@ -1308,14 +1308,14 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
       {
         department: 'OPERATING',
         role: 'Station Master (Pulgaon)',
-        officer_id: 'SM_PUL_01',
+        officer_id: 'SM_PNBE_01',
         signature_hash: '3e1b7194853641ef85smpul01',
         signed_at: '2026-10-12T18:28:00Z',
       },
       {
         department: 'OPERATING',
         role: 'Section Controller (Wardha)',
-        officer_id: 'CTRL_SEC_WDA_02',
+        officer_id: 'CTRL_SEC_DNR_02',
         signature_hash: 'b12a4d81e997ed25519ctrlhist860',
         signed_at: '2026-10-12T18:30:00Z',
       },
@@ -1355,7 +1355,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
       {
         department: 'OHE',
         role: 'Traction Power Controller',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         signature_hash: '8f3ca9b12a4d81e997ed25519tpcngp01',
         signed_at: '2026-10-10T04:10:00Z',
       },
@@ -1403,7 +1403,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
       {
         department: 'OPERATING',
         role: 'Station Master',
-        officer_id: 'SM_WDA_JCT',
+        officer_id: 'SM_PNBE_01',
         signature_hash: '9a1e81e997ed25519smwda99',
         signed_at: '2026-10-08T13:55:00Z',
       },
@@ -1431,7 +1431,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
       {
         department: 'OHE',
         role: 'Traction Power Controller',
-        officer_id: 'TPC_NGP_01',
+        officer_id: 'TPC_DDU_01',
         signature_hash: '1d4ed81e997ed25519tpcngp01',
         signed_at: '2026-10-04T07:40:00Z',
       },
@@ -1441,7 +1441,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
         leaf_id: 'LEAF-01',
         title: 'OHE Dropper Pre-Winter Tension Inspection Log',
         hash: 'b934ca495991b7852b855e3b0c44298fc1c149afbf4c8996fb92427ae41e4649',
-        payload_summary: 'Annual preventive maintenance on Nagpur-Sevagram UP MAIN',
+        payload_summary: 'Annual preventive maintenance on Pt. Deen Dayal Upadhyaya–Buxar UP MAIN',
       },
     ],
   },
@@ -1466,7 +1466,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
       {
         department: 'OPERATING',
         role: 'Station Master (Wardha)',
-        officer_id: 'SM_WDA_01',
+        officer_id: 'SM_ARA_01',
         signature_hash: '7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0',
         signed_at: '2026-10-02T11:35:00Z',
       },
@@ -1504,7 +1504,7 @@ export const INITIAL_AUDIT_BLOCKS: AuditBlock[] = [
         leaf_id: 'LEAF-01',
         title: 'Footplate Night Speed & Signal Visibility Safety Audit',
         hash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-        payload_summary: 'Nagpur-Wardha Down Main nocturnal inspection. Speed restriction compliance verified.',
+        payload_summary: 'Buxar–Ara Junction Down Main nocturnal inspection. Speed restriction compliance verified.',
       },
     ],
   },

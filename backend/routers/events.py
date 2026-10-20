@@ -500,7 +500,7 @@ async def submit_dual_key_approval(event_id: str, payload: ApprovalRequest):
     if payload.role == ApprovalRole.FIELD_SUPERVISOR and payload.decision == ApprovalStatus.APPROVED:
         cur.execute("""
         INSERT INTO statutory_permits (id, event_id, permit_type, earthing_discharged, issued_at, officer_id, notes)
-        VALUES (?, ?, 'ETR_3', 1, ?, ?, 'Form ETR-3: Earth discharge rods attached. Work authorized.')
+        VALUES (?, ?, 'FORM3_PTW', 1, ?, ?, 'Form3-PTW: Earth discharge rods attached. Work authorized on track.')
         """, (str(uuid.uuid4()), event_id, now, payload.officer_id))
 
     # Check overall dual-key state
@@ -730,7 +730,7 @@ async def escalate_sla_breach(event_id: str, reason: str = "TPC response exceede
         "type": "SLA_BREACH_ESCALATED",
         "event_id": event_id,
         "reason": reason,
-        "escalated_to": ["Sr. DOM Nagpur", "DRM Central Railway"],
+        "escalated_to": ["Sr. DOM Danapur", "DRM East Central Railway (Danapur / DDU)"],
         "timestamp": now
     })
 

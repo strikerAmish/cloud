@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, Bell, Radio, CheckCircle2, LogOut, User,
   ShieldCheck, Clock, MapPin, Activity, X, Zap, ArrowRight,
-  SlidersHorizontal, Check
+  SlidersHorizontal, Check, Plus
 } from 'lucide-react';
 import { OperationalEvent } from '../types';
 import { TelemetryBellDrawer } from './TelemetryBellDrawer';
@@ -12,10 +12,13 @@ interface TopHeaderProps {
   events: OperationalEvent[];
   selectedEvent: OperationalEvent | null;
   ambientNotifications: string[];
-  activeView: 'workspace' | 'audit' | 'overview';
+  activeView: 'workspace' | 'audit' | 'overview' | 'chaos';
   selectedSectionId: string;
   onSelectSection?: (secId: string) => void;
   onLogout?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
+  onOpenNewRequisition?: () => void;
 }
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
@@ -25,6 +28,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   selectedSectionId,
   onSelectSection,
   onLogout,
+  searchQuery = '',
+  onSearchChange,
+  onOpenNewRequisition,
 }) => {
   const [bellOpen, setBellOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -36,14 +42,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   const sectionObj = CORRIDOR_SECTIONS.find(s => s.id === selectedSectionId);
   const sectionLabel = sectionObj ? sectionObj.shortName : 'All Sections';
 
-  // Live telemetry feed events
+  // Live telemetry feed events for East Central Railway (Patna & DDU / Danapur)
   const liveFeeds = [
-    { time: '13:18:42Z', post: 'TPC-NGP', msg: 'Circuit breaker trip telemetry verified at Feeding Post FP-04 (Wardha TSS).', type: 'POWER' },
-    { time: '13:16:10Z', post: 'SM-SEGM', msg: 'Sevagram Junction Up Main track block granted for CSM-952 tamping unit.', type: 'BLOCK' },
-    { time: '13:14:25Z', post: 'SM-WDA', msg: 'Physical point clamp #14A padlocked. Reverse route locked against Up Main.', type: 'CLAMP' },
-    { time: '13:10:00Z', post: 'COA-FOIS', msg: 'Section Controller pacing freight rake N/BOXNHL-243 via Down Main at TSR 30 km/h.', type: 'TRAFFIC' },
-    { time: '13:05:12Z', post: 'GSR-DAG', msg: '6 Invariants evaluated. Joint-departmental piggybacking authorized for S&T on UP MAIN.', type: 'PIGGYBACK' },
-    { time: '12:58:30Z', post: 'SCADA-PUL', msg: 'Pulgaon feeding sub FP-06 healthy. Catenary voltage 26.4 kV nominal.', type: 'POWER' },
+    { time: '13:18:42Z', post: 'TPC-DDU', msg: 'Circuit breaker trip telemetry verified at Feeding Post FP-02 (Danapur TSS / DDU Grid).', type: 'POWER' },
+    { time: '13:16:10Z', post: 'SM-PNBE', msg: 'Patna Junction Platform 1 Up Main track possession authorized for CSM-952 tamping unit.', type: 'BLOCK' },
+    { time: '13:14:25Z', post: 'SM-ARA', msg: 'Ara Junction physical point clamp #12B padlocked. Reverse route locked against Up Main.', type: 'CLAMP' },
+    { time: '13:10:00Z', post: 'COA-FOIS', msg: 'Danapur Section Controller pacing container freight rake N/BOXNHL-243 via Down Loop at TSR 30 km/h.', type: 'TRAFFIC' },
+    { time: '13:05:12Z', post: 'GSR-DAG', msg: '6 Invariants evaluated. Joint-departmental Form3-PTW co-utilization granted for S&T on Danapur–Patna.', type: 'PIGGYBACK' },
+    { time: '12:58:30Z', post: 'SCADA-BXR', msg: 'Buxar feeding substation FP-04 healthy. Catenary voltage 26.4 kV nominal.', type: 'POWER' },
   ];
 
   // Click outside to close profile dropdown
@@ -141,7 +147,29 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               </span>
               <span style={{ color: '#CBD5E1', fontSize: 12 }}>/</span>
               <span style={{ fontSize: 12, color: '#64748B' }}>
-                Nagpur Division (CR)
+                Danapur &amp; DDU Division (ECR)
+              </span>
+            </div>
+          )}
+
+          {activeView === 'chaos' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                SRE &amp; Chaos Suite
+              </span>
+              <span style={{ color: '#CBD5E1', fontSize: 12 }}>/</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#B45309',
+                  background: '#FEF3C7',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  border: '1px solid #FDE68A',
+                }}
+              >
+                Four Golden Signals &amp; TTR
               </span>
             </div>
           )}
@@ -150,13 +178,33 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         {/* ── Center: Search + Section Dropdown on the Right of Search ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, maxWidth: 640 }}>
           {/* Search bar */}
-          <div className="search-bar" style={{ flex: 1 }}>
+          <div className="search-bar" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 38, borderRadius: 8, border: '1px solid #E2E8F0', background: '#FFFFFF' }}>
             <Search size={14} color="#94A3B8" />
             <input
               type="text"
-              placeholder="Search events, stations, memos..."
+              placeholder="Search events, stations, memos, departments (e.g. Civil)..."
               id="global-search"
+              value={searchQuery || ''}
+              onChange={e => onSearchChange && onSearchChange(e.target.value)}
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                fontSize: 12.5,
+                background: 'transparent',
+                color: '#0F172A',
+              }}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange && onSearchChange('')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#94A3B8' }}
+                title="Clear search"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
 
           {/* Section Dropdown on the Right of Search */}
@@ -193,6 +241,36 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
         {/* ── Right: Live Feed + Bell + Profile ────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          {/* New Requisition Action Button */}
+          {onOpenNewRequisition && (
+            <button
+              onClick={onOpenNewRequisition}
+              id="top-new-requisition-btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0 13px',
+                height: 34,
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                color: '#FFFFFF',
+                fontSize: 12,
+                fontWeight: 700,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+              onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+              title="Create new Operational Event or Maintenance Block (Screen 2)"
+            >
+              <Plus size={15} color="#fff" strokeWidth={2.5} />
+              <span>New Requisition</span>
+            </button>
+          )}
+
           {/* Live Feed Status Pill (Clickable & Workable) */}
           <button
             onClick={() => setLiveFeedOpen(true)}
@@ -379,7 +457,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                       Station Master (Shift In-Charge)
                     </div>
                     <div style={{ fontSize: 10, color: '#64748B' }}>
-                      Operating ID: CR-SM-4402
+                      Operating ID: ECR-SM-4402
                     </div>
                   </div>
                 </div>
@@ -388,7 +466,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 <div style={{ background: '#F8FAFC', borderRadius: 8, padding: '10px 12px', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569' }}>
                     <MapPin size={12} color="#2563EB" />
-                    <span>Station: <strong>Wardha Jn &amp; Sevagram Control</strong></span>
+                    <span>Station: <strong>Patna Jn &amp; Danapur Control</strong></span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#475569' }}>
                     <ShieldCheck size={12} color="#16A34A" />
@@ -488,7 +566,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   }}
                 />
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#F8FAFC' }}>
-                  Live Station Telemetry Feed • Wardha &amp; Sevagram Corridor
+                  Live Station Telemetry Feed • Patna &amp; DDU / Danapur Corridor
                 </span>
               </div>
               <button

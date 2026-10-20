@@ -22,8 +22,8 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
   onClose,
   onCreated,
 }) => {
-  const [division, setDivision] = useState('NGP');
-  const [section, setSection] = useState('Wardha-Sevagram');
+  const [division, setDivision] = useState('DNR');
+  const [section, setSection] = useState('Danapur-Patna');
   const [trackId, setTrackId] = useState('UP_MAIN');
   const [kmStart, setKmStart] = useState('142.10');
   const [kmEnd, setKmEnd] = useState('143.04');
@@ -118,11 +118,11 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] font-mono">
               {[
                 { step: '1', title: 'Requisition Draft', actor: 'OHE Supervisor' },
-                { step: '2', title: 'Power Block (ETR-1)', actor: 'TPC NGP Desk' },
+                { step: '2', title: 'Power Block (ETR-1)', actor: 'TPC DDU Desk' },
                 { step: '3', title: 'Traffic Feasibility', actor: 'Section Controller' },
                 { step: '4', title: 'Point Clamping', actor: 'Station Master' },
                 { step: '5', title: 'S&T Notice', actor: 'Signal Maintainer' },
-                { step: '6', title: 'Permit ETR-3', actor: 'Field Earthing Crew' },
+                { step: '6', title: 'Permit Form3-PTW', actor: 'Field Earthing Crew' },
                 { step: '7', title: 'Clearance & S3 Seal', actor: 'Dual Sign-off' },
               ].map((s) => (
                 <div key={s.step} className="p-2 rounded bg-slate-900 border border-slate-800">
@@ -163,10 +163,10 @@ export const RequisitionModal: React.FC<RequisitionModalProps> = ({
                 onChange={(e) => setTrackId(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
               >
-                <option value="UP_MAIN">UP_MAIN (Nagpur ⇄ Wardha)</option>
-                <option value="DN_MAIN">DN_MAIN (Wardha ⇄ Nagpur)</option>
-                <option value="LOOP_01">LOOP_01 (Wardha Yard Loop)</option>
-                <option value="YARD_04">YARD_04 (Freight Siding)</option>
+                <option value="UP_MAIN">UP_MAIN (Danapur ⇄ Patna Jn)</option>
+                <option value="DN_MAIN">DN_MAIN (Patna Jn ⇄ Danapur)</option>
+                <option value="LOOP_01">LOOP_01 (Patna Yard Loop)</option>
+                <option value="YARD_04">YARD_04 (Danapur Freight Siding)</option>
               </select>
             </div>
 

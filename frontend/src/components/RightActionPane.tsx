@@ -15,6 +15,7 @@ import {
 interface RightActionPaneProps {
   event: OperationalEvent | null;
   onRefresh: () => void;
+  onUpdateEvent?: (updated: OperationalEvent) => void;
   onNavigateAudit?: () => void;
   isHistoryTab?: boolean;
 }
@@ -33,6 +34,7 @@ const STEPPER = [
 export const RightActionPane: React.FC<RightActionPaneProps> = ({
   event,
   onRefresh,
+  onUpdateEvent,
   onNavigateAudit,
   isHistoryTab = false,
 }) => {
@@ -41,14 +43,14 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Historical Immutability check
+  // Historical Immutability check: Only Stage 7 (Normalized) in History tab is sealed
   const isHistoricalSealed =
-    Boolean(isHistoryTab) ||
-    event?.status === 'BLOCK_CLEARED' ||
-    event?.status === 'AUDIT_LOCKED' ||
-    event?.status === 'CANCELLED' ||
-    event?.status === 'REJECTED' ||
-    (event?.fsm_stage !== undefined && event.fsm_stage >= 6);
+    Boolean(isHistoryTab && (event?.fsm_stage === 7 || event?.status === 'BLOCK_CLEARED' || event?.status === 'AUDIT_LOCKED'));
+
+  // Real-Time Corridor Awareness status flags
+  const isOngoing = event?.fsm_stage === 6 || event?.status === 'ACTIVE_IN_PROGRESS' || event?.status === 'WORK_COMPLETED';
+  const isNormalized = event?.fsm_stage === 7 || event?.status === 'BLOCK_CLEARED' || event?.status === 'AUDIT_LOCKED';
+  const isApproved = event?.fsm_stage === 5 || event?.status === 'APPROVED';
   
   // Interactive Station Master Toggles
   const [powerCutGranted, setPowerCutGranted] = useState<boolean>(
@@ -137,30 +139,59 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
   }
   const effectiveStep = currentStepIdx;
 
-  const handleSelectFsmStage = (targetIdx: number) => {
-    if (targetIdx < 0 || targetIdx >= STEPPER.length) return;
-    if (isHistoricalSealed) {
-      setActionMsg('Statutory Notice: Completed historical block records are sealed under Indian Railways G&SR 15.06 (Read-Only).');
-      return;
-    }
-    const targetStep = STEPPER[targetIdx];
-    event.fsm_stage = targetStep.stage;
-    event.status = targetStep.status as any;
+  // Dynamic Stage Advance / Toggle as work progresses on track
+  const handleAdvanceStage = (targetStage: number) => {
+    if (!event || targetStage < 1 || targetStage > 7) return;
+    const targetStep = STEPPER[targetStage - 1];
 
+    let newStatusColor = '#64748B';
     if (targetStep.stage <= 2) {
-      event.status_color = '#64748B';
+      newStatusColor = '#64748B';
     } else if (targetStep.stage <= 4) {
-      event.status_color = '#F59E0B';
+      newStatusColor = '#F59E0B';
     } else if (targetStep.stage === 5) {
-      event.status_color = '#2563EB';
+      newStatusColor = '#2563EB';
     } else if (targetStep.stage === 6) {
-      event.status_color = '#3B82F6';
+      newStatusColor = '#DC2626'; // Bold red: Active on track
     } else {
-      event.status_color = '#10B981';
+      newStatusColor = '#16A34A'; // Green: Normalized
+    }
+
+    if (targetStep.stage === 6) {
+      setPowerCutGranted(true);
+      setTrafficBlockGranted(true);
+      setPointsClamped(true);
+    } else if (targetStep.stage === 7) {
+      setPowerCutGranted(false);
+      setTrafficBlockGranted(false);
+    }
+
+    const updatedEvent: OperationalEvent = {
+      ...event,
+      fsm_stage: targetStep.stage,
+      status: targetStep.status as any,
+      status_color: newStatusColor,
+      station_actions: {
+        power_cut_granted: targetStep.stage === 6,
+        traffic_block_granted: targetStep.stage === 6,
+        points_clamped_confirmed: targetStep.stage >= 4,
+      }
+    };
+
+    if (onUpdateEvent) {
+      onUpdateEvent(updatedEvent);
+    } else {
+      event.fsm_stage = targetStep.stage;
+      event.status = targetStep.status as any;
+      event.status_color = newStatusColor;
+      onRefresh();
     }
 
     setActionMsg(`✓ FSM Lifecycle Stage moved to Stage ${targetStep.num}: ${targetStep.label} (${targetStep.status})`);
-    onRefresh();
+  };
+
+  const handleSelectFsmStage = (targetIdx: number) => {
+    handleAdvanceStage(targetIdx + 1);
   };
 
   const handleSign = async (role: ApprovalRole, dept: Department, officerId: string) => {
@@ -189,8 +220,20 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
           signed_at: new Date().toISOString(),
         });
       }
-      setActionMsg(`✓ Statutory approval granted by ${officerId} (${dept})`);
-      onRefresh();
+
+      // Check if all approvals are now completed to auto-advance FSM to Stage 5 (Approved)
+      const isTpcDone = role === 'TPC' || event.stakeholders.find(s => s.role === 'TPC')?.approval_status === 'APPROVED';
+      const isCtrlDone = role === 'SECTION_CONTROLLER' || event.stakeholders.find(s => s.role === 'SECTION_CONTROLLER')?.approval_status === 'APPROVED';
+      const isSmDone = role === 'STATION_MASTER' || event.stakeholders.find(s => s.role === 'STATION_MASTER')?.approval_status === 'APPROVED';
+
+      if (isTpcDone && isCtrlDone && isSmDone && event.fsm_stage < 5) {
+        handleAdvanceStage(5);
+        setActionMsg(`✓ Quorum completed! Approved by ${officerId}. FSM automatically advanced to Stage 5: Approved.`);
+      } else {
+        setActionMsg(`✓ Statutory approval granted by ${officerId} (${dept})`);
+        if (onUpdateEvent) onUpdateEvent({ ...event });
+        else onRefresh();
+      }
     } finally {
       setLoadingRole(null);
     }
@@ -208,8 +251,16 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
         delete existing.signed_at;
         delete existing.signature_hash;
       }
-      setActionMsg(`↺ Statutory clearance revoked for ${officerId} (${dept}). Reverted to PENDING.`);
-      onRefresh();
+      
+      // If FSM was Approved (Stage 5), roll back to Stage 4 (Awaiting Approval)
+      if (event.fsm_stage >= 5) {
+        handleAdvanceStage(4);
+        setActionMsg(`↺ Statutory clearance revoked for ${officerId}. Reverted FSM to Stage 4: Awaiting Approval.`);
+      } else {
+        setActionMsg(`↺ Statutory clearance revoked for ${officerId} (${dept}). Reverted to PENDING.`);
+        if (onUpdateEvent) onUpdateEvent({ ...event });
+        else onRefresh();
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to revoke clearance');
     } finally {
@@ -225,7 +276,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
     if (!reason) return;
     setLoading(true);
     try {
-      const r = await emergencyAbort(event.id, 'SM_WDA_JCT', reason);
+      const r = await emergencyAbort(event.id, 'SM_PNBE_01', reason);
       setActionMsg(r.message || 'Emergency Abort executed. Corridor isolated.');
       onRefresh();
     } catch {
@@ -274,6 +325,220 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
         gap: 20,
       }}
     >
+      {/* ── REAL-TIME CORRIDOR AWARENESS BANNER (Single Glance State) ── */}
+      <div
+        id="corridor-awareness-banner"
+        style={{
+          borderRadius: 10,
+          border: isOngoing
+            ? '2px solid #EF4444'
+            : isNormalized
+            ? '2px solid #22C55E'
+            : isApproved
+            ? '2px solid #3B82F6'
+            : '2px solid #F59E0B',
+          background: isOngoing
+            ? '#FEF2F2'
+            : isNormalized
+            ? '#F0FDF4'
+            : isApproved
+            ? '#EFF6FF'
+            : '#FFFBEB',
+          padding: '14px 18px',
+          boxShadow: isOngoing
+            ? '0 3px 12px rgba(239, 68, 68, 0.12)'
+            : '0 1px 4px rgba(0,0,0,0.03)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 12px',
+                borderRadius: 99,
+                fontWeight: 800,
+                fontSize: 12,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                background: isOngoing
+                  ? '#DC2626'
+                  : isNormalized
+                  ? '#16A34A'
+                  : isApproved
+                  ? '#2563EB'
+                  : '#D97706',
+                color: '#FFFFFF',
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#FFFFFF',
+                }}
+              />
+              {isOngoing
+                ? '🔴 TRACK POSSESSION ACTIVE'
+                : isNormalized
+                ? '🟢 READY FOR NORMAL TRAIN TRAFFIC'
+                : isApproved
+                ? '🔵 APPROVED (READY FOR POSSESSION)'
+                : '🟡 AWAITING STATUTORY SIGN-OFF'}
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
+              {isOngoing
+                ? 'LINE BLOCKED — MEN & MACHINERY ON TRACK'
+                : isNormalized
+                ? 'LINE NORMALIZED — FIT FOR FULL LINE SPEED'
+                : isApproved
+                ? 'ALL APPROVALS GRANTED — OCCUPANCY PERMITTED'
+                : 'STATUTORY APPROVAL QUORUM PENDING'}
+            </span>
+          </div>
+
+          {/* Quick Corridor Progression Direct Action */}
+          <div>
+            {isOngoing && (
+              <button
+                type="button"
+                onClick={() => handleAdvanceStage(7)}
+                id="quick-normalize-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '7px 14px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#16A34A',
+                  color: '#FFFFFF',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(22,163,74,0.25)',
+                }}
+              >
+                <CheckCircle2 size={14} /> Normalize Track (➔ Stage 7)
+              </button>
+            )}
+            {isApproved && (
+              <button
+                type="button"
+                onClick={() => handleAdvanceStage(6)}
+                id="quick-activate-possession-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '7px 14px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#DC2626',
+                  color: '#FFFFFF',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(220,38,38,0.25)',
+                }}
+              >
+                <Zap size={14} /> Grant Possession &amp; Cut Power (➔ Stage 6)
+              </button>
+            )}
+            {!isOngoing && !isApproved && !isNormalized && dualKeyCleared && (
+              <button
+                type="button"
+                onClick={() => handleAdvanceStage(5)}
+                id="quick-approve-fsm-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '7px 14px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#2563EB',
+                  color: '#FFFFFF',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <CheckCircle2 size={14} /> Advance to Approved (➔ Stage 5)
+              </button>
+            )}
+            {isNormalized && (
+              <button
+                type="button"
+                onClick={() => handleAdvanceStage(6)}
+                id="quick-reopen-possession-btn"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  border: '1px solid #CBD5E1',
+                  background: '#FFFFFF',
+                  color: '#475569',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <RotateCcw size={12} /> Re-open Active Possession
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Operational Directive Details */}
+        <div style={{ fontSize: 11.5, color: '#334155', lineHeight: 1.45 }}>
+          {isOngoing && (
+            <span>
+              <strong>Station Master Directive (G&amp;SR 15.06):</strong> Line possession is active under Form3-PTW. 25kV catenary isolated. Points clamped against target track. <strong>ALL TRAIN MOVEMENTS INTO THIS CORRIDOR BLOCK ARE STRICTLY PROHIBITED.</strong>
+            </span>
+          )}
+          {isNormalized && (
+            <span>
+              <strong>Corridor Directive (G&amp;SR 15.17):</strong> Work completed, earth discharge rods removed, 25kV traction re-energized, point clamps removed. <strong>TRACK FIT CERTIFICATE SEALED — CORRIDOR IS READY FOR NORMAL TRAIN HEADWAY.</strong>
+            </span>
+          )}
+          {isApproved && (
+            <span>
+              <strong>Pre-Possession Status:</strong> Multi-officer statutory authorizations (TPC, Section Controller &amp; SM) have been granted. Fencing token acquired. Ready to trip feeding post breaker and issue field Form3-PTW.
+            </span>
+          )}
+          {!isOngoing && !isApproved && !isNormalized && (
+            <span>
+              <strong>Requisition Queue Status:</strong> Requisition memo is undergoing inter-departmental quorum reviews. Normal train movements currently continue under caution order.
+            </span>
+          )}
+        </div>
+
+        {/* Real-time Telemetry & Interlocking Status Strip */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingTop: 2 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#0F172A' }}>
+            📍 {event.section} ({event.track_id.replace(/_/g, ' ')})
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#FEE2E2' : '#F1F5F9', border: `1px solid ${isOngoing ? '#FCA5A5' : '#CBD5E1'}`, color: isOngoing ? '#991B1B' : '#475569' }}>
+            ⚡ Catenary: {isOngoing ? '25kV Isolated & Grounded' : isNormalized ? '26.4 kV Nominal (Energized)' : 'Energized'}
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#FEE2E2' : '#F1F5F9', border: `1px solid ${isOngoing ? '#FCA5A5' : '#CBD5E1'}`, color: isOngoing ? '#991B1B' : '#475569' }}>
+            🔒 Interlocking: {isOngoing ? 'Padlocked (#14A Reverse Clamped)' : isNormalized ? 'Restored to Central Interlocking' : 'Normal Routes'}
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#DC2626' : isNormalized ? '#16A34A' : '#2563EB', color: '#FFFFFF' }}>
+            🚆 Train Traffic: {isOngoing ? 'PROHIBITED / BLOCKED' : isNormalized ? 'PERMITTED (NORMAL HEADWAY)' : 'RUNNING (SCHEDULED)'}
+          </span>
+        </div>
+      </div>
+
       {/* ── Top Header: Requisition Overview & Actions ─ */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
@@ -1075,7 +1340,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
             <FileSignature size={18} color="#2563EB" />
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
-                Digital Statutory Permit Memo (Form ETR-3)
+                Digital Statutory Permit Memo (Form3-PTW)
               </div>
               <div style={{ fontSize: 10.5, color: '#64748B' }}>
                 Replaces handwritten paper memo photographed on WhatsApp
@@ -1285,6 +1550,70 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
             Click any stage pill to switch
           </span>
         </div>
+
+        {/* ── FSM Stage Step Navigation Controls ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12, paddingTop: 10, borderTop: '1px solid #E2E8F0' }}>
+          <button
+            type="button"
+            onClick={() => handleAdvanceStage(effectiveStep)}
+            disabled={effectiveStep === 0}
+            id="fsm-prev-stage-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '6px 12px',
+              borderRadius: 6,
+              border: '1px solid #CBD5E1',
+              background: '#FFFFFF',
+              color: effectiveStep === 0 ? '#94A3B8' : '#334155',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: effectiveStep === 0 ? 'not-allowed' : 'pointer',
+              opacity: effectiveStep === 0 ? 0.6 : 1,
+            }}
+          >
+            <ChevronLeft size={13} />
+            Previous Stage {effectiveStep > 0 ? `(${STEPPER[effectiveStep - 1]?.label})` : ''}
+          </button>
+
+          <span style={{ fontSize: 11, color: '#64748B', fontWeight: 500 }}>
+            Corridor Progress: <strong>Stage {effectiveStep + 1} of 7</strong> ({STEPPER[effectiveStep]?.label})
+          </span>
+
+          <button
+            type="button"
+            onClick={() => handleAdvanceStage(effectiveStep + 2)}
+            disabled={effectiveStep === 6}
+            id="fsm-next-stage-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '6px 14px',
+              borderRadius: 6,
+              border: 'none',
+              background: effectiveStep === 6 ? '#94A3B8' : effectiveStep === 4 ? '#DC2626' : effectiveStep === 5 ? '#16A34A' : '#2563EB',
+              color: '#FFFFFF',
+              fontSize: 11.5,
+              fontWeight: 700,
+              cursor: effectiveStep === 6 ? 'not-allowed' : 'pointer',
+              opacity: effectiveStep === 6 ? 0.6 : 1,
+              boxShadow: effectiveStep === 4 ? '0 2px 6px rgba(220,38,38,0.25)' : 'none',
+            }}
+          >
+            <span>
+              {effectiveStep === 4
+                ? '⚡ Activate Track Possession (➔ Stage 6)'
+                : effectiveStep === 5
+                ? '✓ Normalize Track (➔ Stage 7)'
+                : effectiveStep < 6
+                ? `Advance Stage (➔ ${STEPPER[effectiveStep + 1]?.label})`
+                : 'Corridor Fully Normalized'}
+            </span>
+            {effectiveStep < 6 && <ChevronRight size={13} />}
+          </button>
+        </div>
       </div>
 
       {/* ── Human-in-the-Loop Statutory Sign-off Rows ── */}
@@ -1312,7 +1641,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    Traction Power Controller (TPC)
+                    Traction Power Controller (TPC / DDU SCADA)
                     {isTpcApproved && (
                       <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
                         ✓ SIGNED (Form ETR-1)
@@ -1320,7 +1649,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                     )}
                   </div>
                   <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                    <span>TPC_NGP_01 • SCADA Feeder Clearance</span>
+                    <span>TPC_DDU_01 • SCADA Feeder Clearance (DDU Grid)</span>
                     {isTpcApproved && tpc?.signed_at && (
                       <span style={{ color: '#16A34A', fontSize: 10.5 }}>
                         • Signed at {new Date(tpc.signed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -1341,7 +1670,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                     </span>
                     <button
                       className="btn-secondary"
-                      onClick={() => handleRevokeApproval('TPC', 'OHE', 'TPC_NGP_01')}
+                      onClick={() => handleRevokeApproval('TPC', 'OHE', 'TPC_DDU_01')}
                       disabled={loadingRole === 'TPC'}
                       id="revoke-btn-tpc"
                       title="Undo / Revoke this clearance and return to Pending"
@@ -1353,7 +1682,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 ) : (
                   <button
                     className="btn-primary"
-                    onClick={() => handleSign('TPC', 'OHE', 'TPC_NGP_01')}
+                    onClick={() => handleSign('TPC', 'OHE', 'TPC_DDU_01')}
                     disabled={loadingRole === 'TPC'}
                     id="auth-btn-tpc"
                   >
@@ -1374,7 +1703,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    Section Controller (Wardha Control)
+                    Section Controller (Danapur Control)
                     {isCtrlApproved && (
                       <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
                         ✓ AUTHORIZED
@@ -1382,7 +1711,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                     )}
                   </div>
                   <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                    <span>CTRL_SEC_WDA_02 • Train Path Feasibility</span>
+                    <span>CTRL_SEC_DNR_02 • Train Path Feasibility</span>
                     {isCtrlApproved && ctrl?.signed_at && (
                       <span style={{ color: '#16A34A', fontSize: 10.5 }}>
                         • Authorized at {new Date(ctrl.signed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
@@ -1403,7 +1732,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                     </span>
                     <button
                       className="btn-secondary"
-                      onClick={() => handleRevokeApproval('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_WDA_02')}
+                      onClick={() => handleRevokeApproval('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_DNR_02')}
                       disabled={loadingRole === 'SECTION_CONTROLLER'}
                       id="revoke-btn-ctrl"
                       title="Undo / Revoke this authorization and return to Pending"
@@ -1415,7 +1744,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 ) : (
                   <button
                     className="btn-primary"
-                    onClick={() => handleSign('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_WDA_02')}
+                    onClick={() => handleSign('SECTION_CONTROLLER', 'OPERATING', 'CTRL_SEC_DNR_02')}
                     disabled={loadingRole === 'SECTION_CONTROLLER'}
                     id="auth-btn-ctrl"
                   >
@@ -1436,7 +1765,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    Station Master (Ravi Amish, SM/WDA)
+                    Station Master (Ravi Amish, SM/PNBE Desk #01)
                     {isSmApproved && (
                       <span style={{ fontSize: 10, fontWeight: 600, background: '#DCFCE7', color: '#16A34A', padding: '1px 6px', borderRadius: 4 }}>
                         ✓ MASTER SEAL GRANTED
@@ -1465,7 +1794,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                     </span>
                     <button
                       className="btn-secondary"
-                      onClick={() => handleRevokeApproval('STATION_MASTER', 'OPERATING', 'SM_WDA_JCT')}
+                      onClick={() => handleRevokeApproval('STATION_MASTER', 'OPERATING', 'SM_PNBE_01')}
                       disabled={loadingRole === 'STATION_MASTER'}
                       id="revoke-btn-sm"
                       title="Undo / Revoke this Station Master seal and return to Pending"
@@ -1477,7 +1806,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                 ) : (
                   <button
                     className="btn-primary"
-                    onClick={() => handleSign('STATION_MASTER', 'OPERATING', 'SM_WDA_JCT')}
+                    onClick={() => handleSign('STATION_MASTER', 'OPERATING', 'SM_PNBE_01')}
                     disabled={loadingRole === 'STATION_MASTER'}
                     id="auth-btn-sm"
                   >
@@ -1599,13 +1928,13 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
             {/* Indian Railways Official Memo Header */}
             <div style={{ textAlign: 'center', borderBottom: '2px solid #0F172A', paddingBottom: 14, marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A', letterSpacing: '0.08em' }}>
-                INDIAN RAILWAYS • CENTRAL RAILWAY (NAGPUR DIVISION)
+                INDIAN RAILWAYS • EAST CENTRAL RAILWAY (DANAPUR &amp; DDU DIVISION)
               </div>
               <div style={{ fontSize: 16, fontWeight: 900, color: '#1D4ED8', marginTop: 4 }}>
                 STATUTORY LINE POSSESSION &amp; POWER BLOCK PERMIT MEMO
               </div>
               <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>
-                FORM ETR-3 / IR-OPR-4 • ISSUED VIA RAILSYNC DIGITAL DECISION DESK
+                Form3-PTW / IR-OPR-4 • ISSUED VIA RAILSYNC DIGITAL DECISION DESK
               </div>
             </div>
 
@@ -1613,7 +1942,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, fontSize: 12, marginBottom: 18 }}>
               <div>
                 <span style={{ color: '#64748B', display: 'block', fontSize: 10.5 }}>PERMIT REFERENCE:</span>
-                <strong style={{ fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>PERMIT-CR-NGP-2026-00132</strong>
+                <strong style={{ fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>PERMIT-ECR-DNR-2026-00132</strong>
               </div>
               <div>
                 <span style={{ color: '#64748B', display: 'block', fontSize: 10.5 }}>DATE &amp; TIME ISSUED:</span>
@@ -1633,7 +1962,7 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
               </div>
               <div>
                 <span style={{ color: '#64748B', display: 'block', fontSize: 10.5 }}>GRANTING STATION MASTER:</span>
-                <strong>Ravi Amish (SM/WDA Desk #01)</strong>
+                <strong>Ravi Amish (SM/PNBE Desk #01)</strong>
               </div>
             </div>
 

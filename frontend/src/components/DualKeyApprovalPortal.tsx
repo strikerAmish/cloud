@@ -112,9 +112,9 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             </p>
 
             <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
-              <div>• Officer ID: <span className="text-blue-400">{tpcStakeholder?.officer_id || 'TPC_NGP_01'}</span></div>
+              <div>• Officer ID: <span className="text-blue-400">{tpcStakeholder?.officer_id || 'TPC_DDU_01'}</span></div>
               <div>• Statutory Rule: ACTM Vol. II Section 20615</div>
-              <div>• Sub-Station: Wardha Traction Sub-Station (TSS)</div>
+              <div>• Sub-Station: Danapur Traction Sub-Station (TSS)</div>
               {tpcStakeholder?.signature_hash && (
                 <div className="text-[10px] text-emerald-400 truncate">
                   • Sig: {tpcStakeholder.signature_hash}
@@ -124,7 +124,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           </div>
 
           <button
-            onClick={() => handleSign('TPC' as ApprovalRole, 'OHE' as Department, 'TPC_NGP_01')}
+            onClick={() => handleSign('TPC' as ApprovalRole, 'OHE' as Department, 'TPC_DDU_01')}
             disabled={loadingRole === 'TPC' || tpcStakeholder?.approval_status === 'APPROVED'}
             className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tpcStakeholder?.approval_status === 'APPROVED'
@@ -156,13 +156,13 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
 
             <h3 className="font-bold text-sm text-white mb-1">Traffic Block Feasibility Grant</h3>
             <p className="text-xs text-slate-400 mb-3">
-              Evaluates live train charts in COA, timetables, and passenger rake regulation per G&SR Chapter IV.
+              Evaluates live train charts in COA, timetables, and passenger rake regulation per G&amp;SR Chapter IV.
             </p>
 
             <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
-              <div>• Officer ID: <span className="text-blue-400">{ctrlStakeholder?.officer_id || 'CTRL_SEC_WDA_02'}</span></div>
-              <div>• Statutory Rule: G&SR Chapter IV (Line Block Grant)</div>
-              <div>• Corridor: Wardha-Sevagram UP MAIN</div>
+              <div>• Officer ID: <span className="text-blue-400">{ctrlStakeholder?.officer_id || 'CTRL_SEC_DNR_02'}</span></div>
+              <div>• Statutory Rule: G&amp;SR Chapter IV (Line Block Grant)</div>
+              <div>• Corridor: Danapur-Patna UP MAIN</div>
               {ctrlStakeholder?.signature_hash && (
                 <div className="text-[10px] text-emerald-400 truncate">
                   • Sig: {ctrlStakeholder.signature_hash}
@@ -172,7 +172,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
           </div>
 
           <button
-            onClick={() => handleSign('SECTION_CONTROLLER' as ApprovalRole, 'OPERATING' as Department, 'CTRL_SEC_WDA_02')}
+            onClick={() => handleSign('SECTION_CONTROLLER' as ApprovalRole, 'OPERATING' as Department, 'CTRL_SEC_DNR_02')}
             disabled={loadingRole === 'SECTION_CONTROLLER' || ctrlStakeholder?.approval_status === 'APPROVED'}
             className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               ctrlStakeholder?.approval_status === 'APPROVED'
@@ -191,7 +191,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
                 <Lock className="w-4 h-4 text-blue-400" />
-                STATION MASTER INTERLOCKING & POINT CLAMPING
+                STATION MASTER INTERLOCKING &amp; POINT CLAMPING
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 smStakeholder?.approval_status === 'APPROVED'
@@ -202,20 +202,20 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
               </span>
             </div>
 
-            <h3 className="font-bold text-sm text-white mb-1">Physical Point Clamping & Padlocking</h3>
+            <h3 className="font-bold text-sm text-white mb-1">Physical Point Clamping &amp; Padlocking</h3>
             <p className="text-xs text-slate-400 mb-3">
               Verifies electronic route interlocking locked against target track. Confirms physical clamps on points #14A/B.
             </p>
 
             <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
-              <div>• Officer ID: <span className="text-blue-400">{smStakeholder?.officer_id || 'SM_WDA_JCT'}</span></div>
-              <div>• Cabin: Wardha North Cabin (RRI)</div>
-              <div>• Interlocking State: CLAMPED & PADLOCKED</div>
+              <div>• Officer ID: <span className="text-blue-400">{smStakeholder?.officer_id || 'SM_PNBE_01'}</span></div>
+              <div>• Cabin: Patna Jn RRI Cabin</div>
+              <div>• Interlocking State: CLAMPED &amp; PADLOCKED</div>
             </div>
           </div>
 
           <button
-            onClick={() => handleSign('STATION_MASTER' as ApprovalRole, 'OPERATING' as Department, 'SM_WDA_JCT')}
+            onClick={() => handleSign('STATION_MASTER' as ApprovalRole, 'OPERATING' as Department, 'SM_PNBE_01')}
             disabled={loadingRole === 'STATION_MASTER' || smStakeholder?.approval_status === 'APPROVED'}
             className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               smStakeholder?.approval_status === 'APPROVED'
@@ -224,7 +224,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             }`}
           >
             <Lock className="w-4 h-4" />
-            {smStakeholder?.approval_status === 'APPROVED' ? '✓ Points Clamped & Verified' : 'Confirm SM Point Clamping'}
+            {smStakeholder?.approval_status === 'APPROVED' ? '✓ Points Clamped &amp; Verified' : 'Confirm SM Point Clamping'}
           </button>
         </div>
 
@@ -234,7 +234,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-bold text-blue-400 flex items-center gap-1.5">
                 <FileSignature className="w-4 h-4 text-blue-400" />
-                FIELD SUPERVISOR PERMIT-TO-WORK (ETR-3)
+                FIELD SUPERVISOR PERMIT-TO-WORK (Form3-PTW)
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                 sseStakeholder?.approval_status === 'APPROVED'
@@ -251,14 +251,14 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             </p>
 
             <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300 mb-4 neo-pressed">
-              <div>• Officer ID: <span className="text-blue-400">{sseStakeholder?.officer_id || 'SSE_OHE_WDA_04'}</span></div>
-              <div>• Form Code: ACTM ETR-3 (Permit-to-Work)</div>
-              <div>• Rods Applied: 2 Rods (Upstream & Downstream)</div>
+              <div>• Officer ID: <span className="text-blue-400">{sseStakeholder?.officer_id || 'SSE_OHE_DNR_04'}</span></div>
+              <div>• Form Code: Form3-PTW (Permit-to-Work)</div>
+              <div>• Rods Applied: 2 Rods (Upstream &amp; Downstream)</div>
             </div>
           </div>
 
           <button
-            onClick={() => handleSign('FIELD_SUPERVISOR' as ApprovalRole, 'OHE' as Department, 'SSE_OHE_WDA_04')}
+            onClick={() => handleSign('FIELD_SUPERVISOR' as ApprovalRole, 'OHE' as Department, 'SSE_OHE_DNR_04')}
             disabled={loadingRole === 'FIELD_SUPERVISOR' || sseStakeholder?.approval_status === 'APPROVED'}
             className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
               sseStakeholder?.approval_status === 'APPROVED'
@@ -267,7 +267,7 @@ export const DualKeyApprovalPortal: React.FC<DualKeyApprovalPortalProps> = ({ ev
             }`}
           >
             <Zap className="w-4 h-4" />
-            {sseStakeholder?.approval_status === 'APPROVED' ? '✓ Permit ETR-3 Active' : 'Issue Field Permit ETR-3'}
+            {sseStakeholder?.approval_status === 'APPROVED' ? '✓ Permit Form3-PTW Active' : 'Issue Field Permit Form3-PTW'}
           </button>
         </div>
       </div>

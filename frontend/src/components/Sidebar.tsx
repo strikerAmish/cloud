@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  Train, LayoutDashboard, CheckSquare, ClockIcon, HelpCircle, ArrowRight
+  Train, LayoutDashboard, CheckSquare, ClockIcon, HelpCircle, ArrowRight, Flame
 } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
-  setActiveView: (v: 'workspace' | 'audit' | 'overview') => void;
+  setActiveView: (v: 'workspace' | 'audit' | 'overview' | 'chaos') => void;
   isOfflineMode: boolean;
   setIsOfflineMode: (v: boolean) => void;
   wsConnected: boolean;
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { id: 'workspace',  label: 'Approval Portal',    icon: CheckSquare     },
   { id: 'audit',      label: 'Audit & History',    icon: ClockIcon       },
   { id: 'overview',   label: 'Corridor Overview',  icon: LayoutDashboard },
+  { id: 'chaos',      label: 'SRE & Chaos Suite',  icon: Flame           },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -65,8 +66,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div style={{ fontSize: 15, fontWeight: 800, color: '#F8FAFC', letterSpacing: '0.02em', lineHeight: 1.1 }}>
               <span style={{ color: '#60A5FA' }}>Rail</span>Sync
             </div>
-            <div style={{ fontSize: 10, color: '#64748B', marginTop: 2, letterSpacing: '0.04em' }}>
-              CR · Nagpur Division
+            <div style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 2, letterSpacing: '0.04em', fontWeight: 600 }}>
+              ECR Danapur Division
             </div>
           </div>
         </div>
@@ -91,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <button
                 key={id}
-                onClick={() => setActiveView(id as 'workspace' | 'audit' | 'overview')}
+                onClick={() => setActiveView(id as 'workspace' | 'audit' | 'overview' | 'chaos')}
                 className={`nav-item${isActive ? ' active' : ''}`}
                 style={{
                   position: 'relative',
@@ -184,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 fontWeight: 500,
               }}
             >
-              Nagpur Ext. 4022
+              Danapur Ext. 4022
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ interface MiddleColumnProps {
   onSelectSection: (secId: string) => void;
   selectedDept: string;
   onSelectDept: (dept: string) => void;
+  searchQuery?: string;
 }
 
 const TAB_CONFIG = [
@@ -31,18 +32,22 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
   onSelectSection,
   selectedDept,
   onSelectDept,
+  searchQuery = '',
 }) => {
   const [historyScope, setHistoryScope] = React.useState<'ALL' | '30D' | '7D' | '24H'>('ALL');
 
-  // Helper to categorize an event by tab
+  // Helper to categorize an event by tab:
+  // Tab 0 = Ongoing Work (Stage 6: Active on Track)
+  // Tab 1 = Pending Approvals (Stages 1-5: Requisitions and Approvals)
+  // Tab 2 = History (Stage 7: Normalized & Sealed)
   const getEventCategory = (e: OperationalEvent): number => {
-    if (e.fsm_stage === 5 || e.status === 'ACTIVE_IN_PROGRESS' || e.status === 'WORK_COMPLETED') {
-      return 0; // Ongoing Work
-    }
-    if (e.fsm_stage >= 6 || e.status === 'BLOCK_CLEARED' || e.status === 'AUDIT_LOCKED' || e.status === 'CANCELLED' || e.status === 'REJECTED') {
+    if (e.fsm_stage === 7 || e.status === 'BLOCK_CLEARED' || e.status === 'AUDIT_LOCKED' || e.status === 'CANCELLED' || e.status === 'REJECTED') {
       return 2; // History
     }
-    return 1; // Pending Approvals (Stage 1-4)
+    if (e.fsm_stage === 6 || e.status === 'ACTIVE_IN_PROGRESS' || e.status === 'WORK_COMPLETED') {
+      return 0; // Ongoing Work
+    }
+    return 1; // Pending Approvals (Stage 1 to 5)
   };
 
   // Helper to get normalized department across all Indian Railways wings
@@ -95,7 +100,77 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
     return 'OPERATING';
   };
 
-  // Filter events based on active tab, selected section, department, and history scope
+  // Helper for real-time search query matching across all railway attributes
+  const eventMatchesQuery = (e: OperationalEvent, query: string): boolean => {
+    if (!query) return true;
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+
+    // Direct identifier and textual match
+    if ((e.id || '').toLowerCase().includes(q)) return true;
+    if ((e.section || '').toLowerCase().includes(q)) return true;
+    if ((e.track_id || '').toLowerCase().includes(q)) return true;
+    if ((e.description || '').toLowerCase().includes(q)) return true;
+    if ((e.originator_id || '').toLowerCase().includes(q)) return true;
+    if ((e.status || '').toLowerCase().includes(q)) return true;
+    if (e.field_photo?.gang_supervisor?.toLowerCase().includes(q)) return true;
+    if (e.field_photo?.km_chainage?.toLowerCase().includes(q)) return true;
+
+    // Multi-department and stakeholder matches
+    if (e.stakeholders?.some(s =>
+      (s.officer_id || '').toLowerCase().includes(q) ||
+      (s.role || '').toLowerCase().includes(q) ||
+      (s.department || '').toLowerCase().includes(q)
+    )) return true;
+
+    // Department keyword aliases (e.g. searching "Civil" finds Civil/P-Way events)
+    const dept = getEventDept(e);
+    if (q === 'civil' || q === 'pway' || q === 'p-way' || q === 'track' || q === 'tamping' || q === 'ballast') {
+      if (dept === 'CIVIL_P_WAY') return true;
+    }
+    if (q === 'ohe' || q === 'electrical' || q === 'traction' || q === 'catenary' || q === 'power' || q === 'tpc') {
+      if (dept === 'OHE') return true;
+    }
+    if (q === 'signal' || q === 's&t' || q === 'snt' || q === 'telecom' || q === 'points' || q === 'interlocking') {
+      if (dept === 'S_AND_T') return true;
+    }
+    if (q === 'mech' || q === 'mechanical' || q === 'c&w' || q === 'wagon' || q === 'rake') {
+      if (dept === 'MECHANICAL_CW') return true;
+    }
+    if (q === 'safety' || q === 'rpf' || q === 'security' || q === 'inspection') {
+      if (dept === 'SAFETY') return true;
+    }
+    if (q === 'operating' || q === 'traffic' || q === 'controller' || q === 'sm') {
+      if (dept === 'OPERATING') return true;
+    }
+
+    // Corridor station aliases
+    if (q.includes('patna') || q.includes('pnbe')) {
+      if ((e.section || '').toLowerCase().includes('pnbe') || (e.description || '').toLowerCase().includes('patna')) return true;
+    }
+    if (q.includes('danapur') || q.includes('dnr')) {
+      if ((e.section || '').toLowerCase().includes('dnr') || (e.description || '').toLowerCase().includes('danapur')) return true;
+    }
+    if (q.includes('ara')) {
+      if ((e.section || '').toLowerCase().includes('ara') || (e.description || '').toLowerCase().includes('ara')) return true;
+    }
+    if (q.includes('buxar') || q.includes('bxr')) {
+      if ((e.section || '').toLowerCase().includes('bxr') || (e.description || '').toLowerCase().includes('buxar')) return true;
+    }
+    if (q.includes('ddu') || q.includes('deen dayal')) {
+      if ((e.section || '').toLowerCase().includes('ddu')) return true;
+    }
+
+    // Form3-PTW / permit searches
+    if (q.includes('form3') || q.includes('ptw') || q.includes('form3-ptw') || q.includes('permit') || q.includes('etr-3')) {
+      if (e.permits && e.permits.length > 0) return true;
+      if (e.fsm_stage >= 5) return true;
+    }
+
+    return false;
+  };
+
+  // Filter events based on active tab, selected section, department, search query, and history scope
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
       // 1. Tab category filter
@@ -113,7 +188,12 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
         if (d !== selectedDept) return false;
       }
 
-      // 4. History scope filter
+      // 4. Real-time Search Query Filter
+      if (searchQuery && !eventMatchesQuery(e, searchQuery)) {
+        return false;
+      }
+
+      // 5. History scope filter
       if (activeTab === 2 && historyScope !== 'ALL') {
         const eventDate = new Date(e.created_at || e.requested_start || Date.now()).getTime();
         const now = new Date('2026-10-16T13:24:41+05:30').getTime();
@@ -125,9 +205,18 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
 
       return true;
     });
-  }, [events, activeTab, selectedSectionId, selectedDept, historyScope]);
+  }, [events, activeTab, selectedSectionId, selectedDept, searchQuery, historyScope]);
 
-  // Counts for all 3 tabs (matching current section & dept filter)
+  // Auto-select first matching event when searching
+  React.useEffect(() => {
+    if (searchQuery && searchQuery.trim() && filteredEvents.length > 0) {
+      if (!selectedEvent || !filteredEvents.some(e => e.id === selectedEvent.id)) {
+        onSelectEvent(filteredEvents[0]);
+      }
+    }
+  }, [searchQuery, filteredEvents, selectedEvent, onSelectEvent]);
+
+  // Counts for all 3 tabs (matching current section, dept, and search query)
   const tabCounts = useMemo(() => {
     const counts = [0, 0, 0];
     events.forEach(e => {
@@ -136,11 +225,12 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
         const d = getEventDept(e);
         if (d !== selectedDept) return;
       }
+      if (searchQuery && !eventMatchesQuery(e, searchQuery)) return;
       const cat = getEventCategory(e);
       counts[cat]++;
     });
     return counts;
-  }, [events, selectedSectionId, selectedDept]);
+  }, [events, selectedSectionId, selectedDept, searchQuery]);
 
   // Section title based on current active tab
   const queueTitle = useMemo(() => {
@@ -365,10 +455,12 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
             >
               <AlertCircle size={28} color="#94A3B8" style={{ margin: '0 auto 8px' }} />
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
-                No requests found
+                {searchQuery ? `No results for "${searchQuery}"` : 'No requests found'}
               </div>
               <div style={{ fontSize: 11.5, color: '#64748B', lineHeight: 1.4, marginBottom: 12 }}>
-                No entries match the selected section and department under this tab.
+                {searchQuery
+                  ? `No corridor blocks match "${searchQuery}" under ${TAB_CONFIG[activeTab]?.label}.`
+                  : 'No entries match the selected section and department under this tab.'}
               </div>
               <button
                 onClick={() => {
@@ -394,23 +486,35 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
               const isSelected = selectedEvent?.id === item.id;
               const deptLabel = getEventDept(item);
 
-              // Status badge details
-              let statusBadgeBg = isSelected ? '#DBEAFE' : '#F1F5F9';
-              let statusBadgeColor = isSelected ? '#1D4ED8' : '#475569';
-              let statusText = item.status.replace(/_/g, ' ');
+              // Real-Time Corridor Awareness State
+              const isOngoing = item.fsm_stage === 6 || item.status === 'ACTIVE_IN_PROGRESS' || item.status === 'WORK_COMPLETED';
+              const isNormalized = item.fsm_stage === 7 || item.status === 'BLOCK_CLEARED' || item.status === 'AUDIT_LOCKED';
+              const isApproved = item.fsm_stage === 5 || item.status === 'APPROVED';
 
-              if (activeTab === 0) {
-                statusBadgeBg = '#DBEAFE';
-                statusBadgeColor = '#1E40AF';
-                statusText = 'Stage 5 • Active on Track';
-              } else if (activeTab === 1) {
-                statusBadgeBg = '#FEF3C7';
-                statusBadgeColor = '#B45309';
-                statusText = `Stage ${item.fsm_stage} • Awaiting Approvals`;
-              } else if (activeTab === 2) {
-                statusBadgeBg = '#D1FAE5';
-                statusBadgeColor = '#065F46';
-                statusText = 'Stage 7 • Sealed & Normalized';
+              let statusBadgeBg = '#FFFBEB';
+              let statusBadgeColor = '#92400E';
+              let statusBadgeBorder = '#FCD34D';
+              let statusText = `Stage ${item.fsm_stage || 4} • Awaiting Sign-off`;
+              let awarenessPill = 'Approvals Pending';
+
+              if (isOngoing) {
+                statusBadgeBg = '#FEF2F2';
+                statusBadgeColor = '#DC2626';
+                statusBadgeBorder = '#FCA5A5';
+                statusText = '🔴 ACTIVE ON TRACK';
+                awarenessPill = 'Track Possession Active';
+              } else if (isNormalized) {
+                statusBadgeBg = '#F0FDF4';
+                statusBadgeColor = '#166534';
+                statusBadgeBorder = '#86EFAC';
+                statusText = '🟢 READY FOR TRAFFIC';
+                awarenessPill = 'Normalized & Clear';
+              } else if (isApproved) {
+                statusBadgeBg = '#EFF6FF';
+                statusBadgeColor = '#1D4ED8';
+                statusBadgeBorder = '#93C5FD';
+                statusText = '🔵 APPROVED';
+                awarenessPill = 'Ready to Occupy';
               }
 
               return (
@@ -498,14 +602,28 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
                       <span
                         style={{
                           fontSize: 10,
-                          fontWeight: 600,
+                          fontWeight: 700,
                           padding: '2px 6px',
                           borderRadius: 4,
                           background: statusBadgeBg,
                           color: statusBadgeColor,
+                          border: `1px solid ${statusBadgeBorder}`,
                         }}
                       >
                         {statusText}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 9.5,
+                          fontWeight: 600,
+                          padding: '1px 5px',
+                          borderRadius: 4,
+                          background: isOngoing ? '#FEE2E2' : isNormalized ? '#F0FDF4' : '#F8FAFC',
+                          color: isOngoing ? '#B91C1C' : isNormalized ? '#15803D' : '#64748B',
+                          border: `1px solid ${isOngoing ? '#FCA5A5' : isNormalized ? '#86EFAC' : '#E2E8F0'}`,
+                        }}
+                      >
+                        {awarenessPill}
                       </span>
 
                       {/* Photo Badge */}
@@ -577,7 +695,7 @@ export const MiddleColumn: React.FC<MiddleColumnProps> = ({
             Target Section
           </label>
           <span style={{ fontSize: 10, color: '#64748B' }}>
-            Nagpur Division (CR)
+            Danapur &amp; DDU Division (ECR)
           </span>
         </div>
         <select

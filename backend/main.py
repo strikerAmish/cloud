@@ -219,19 +219,20 @@ def get_corridor_status():
     """Returns real-time track utilization, line capacity, and speed restrictions."""
     locks = lock_manager.list_all_active_locks()
     status_payload = {
-        "corridor": "Nagpur - Wardha - Sevagram (CR/NGP)",
-        "line_capacity_utilization_pct": 118.4,
+        "corridor": "Danapur - Patna Junction - Ara - Buxar - DDU (ECR/DNR)",
+        "line_capacity_utilization_pct": 124.6,
         "total_tracks": ["UP_MAIN", "DN_MAIN", "LOOP_01", "YARD_04"],
         "active_maintenance_blocks": len(locks),
         "locks": list(locks.values()),
         "speed_restrictions": [
-            {"track": "DN_MAIN", "km_start": 142.0, "km_end": 143.5, "tsr_kmh": 30, "reason": "Adjacent OHE block buffer"}
+            {"track": "DN_MAIN", "km_start": 544.1, "km_end": 545.8, "tsr_kmh": 30, "reason": "Adjacent OHE block buffer"}
         ],
         "stations": [
-            {"code": "NGP", "name": "Nagpur Junction", "km": 0.0, "interlocking": "ELECTRONIC_EI", "status": "NORMAL"},
-            {"code": "AJNI", "name": "Ajni", "km": 3.2, "interlocking": "ELECTRONIC_EI", "status": "NORMAL"},
-            {"code": "WR", "name": "Wardha Junction", "km": 79.4, "interlocking": "RRI_PANEL", "status": "ACTIVE_BLOCK"},
-            {"code": "SEGM", "name": "Sevagram Junction", "km": 82.8, "interlocking": "ELECTRONIC_EI", "status": "CAUTION"}
+            {"code": "PNBE", "name": "Patna Junction", "km": 549.0, "interlocking": "ELECTRONIC_EI", "status": "ACTIVE_BLOCK"},
+            {"code": "DNR", "name": "Danapur Junction", "km": 539.2, "interlocking": "ELECTRONIC_EI", "status": "ACTIVE_BLOCK"},
+            {"code": "ARA", "name": "Ara Junction", "km": 499.7, "interlocking": "RRI_PANEL", "status": "NORMAL"},
+            {"code": "BXR", "name": "Buxar Junction", "km": 431.1, "interlocking": "ELECTRONIC_EI", "status": "CAUTION"},
+            {"code": "DDU", "name": "Pt. Deen Dayal Upadhyaya Jn", "km": 336.8, "interlocking": "ELECTRONIC_EI", "status": "NORMAL"}
         ]
     }
     # Cache in projection store
@@ -278,7 +279,7 @@ async def websocket_corridor_stream(
         # Send initial status snapshot upon connection with active traceparent
         await websocket.send_text(json.dumps({
             "type": "INITIAL_SNAPSHOT",
-            "corridor": "Nagpur - Wardha - Sevagram",
+            "corridor": "Danapur - Patna Junction - Ara - Buxar - DDU (ECR/DNR)",
             "active_locks": len(lock_manager.list_all_active_locks()),
             "traceparent": ws_traceparent,
             "trace_id": trace_id,

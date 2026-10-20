@@ -100,14 +100,14 @@ export const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
       name: 'Speed Restriction',
       category: 'Caution Order Bulletin',
       status: 'passed',
-      detail: 'TSR-WDA-2026-88 issued to Nagpur loco pilot crew.',
+      detail: 'TSR-DNR-2026-88 issued to Danapur loco pilot crew.',
     },
     {
       id: 5,
       name: 'Crew Availability',
       category: 'OHE Breakdown Gang',
       status: 'passed',
-      detail: 'SSE/OHE gang + Tower Wagon TW-44 positioned at Wardha.',
+      detail: 'SSE/OHE gang + Tower Wagon TW-44 positioned at Danapur.',
     },
     {
       id: 6,
@@ -142,12 +142,12 @@ export const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   const handleActivate = () =>
     run(async () => {
       await activateWork(event.id);
-      return '25kV catenary tripped & Permit ETR-3 activated.';
+      return '25kV catenary tripped & Permit Form3-PTW activated.';
     }, '');
 
   const handleComplete = () =>
     run(async () => {
-      await completeWork(event.id, 'SSE_OHE_WDA_04');
+      await completeWork(event.id, 'SSE_OHE_DNR_04');
       return 'Work completion memo signed by Field Supervisor.';
     }, '');
 
@@ -170,7 +170,7 @@ export const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
     );
     if (!reason) return;
     run(async () => {
-      const r = await emergencyAbort(event.id, 'CTRL_SEC_WDA_02', reason);
+      const r = await emergencyAbort(event.id, 'CTRL_SEC_DNR_02', reason);
       return r.message;
     }, 'Emergency Abort executed successfully');
   };
@@ -206,31 +206,31 @@ export const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
       title: 'TPC ETR-1 Power Block',
       subtitle: 'Traction Power Controller • 25kV Catenary Isolation',
       dept: 'OHE' as Department,
-      officerId: 'TPC_NGP_01',
+      officerId: 'TPC_DDU_01',
       stakeholder: tpc,
     },
     {
       role: 'STATION_MASTER' as ApprovalRole,
       title: 'Station Master Point Clamping',
-      subtitle: 'Wardha Jn (WR) • Physical Padlock #14A/B',
+      subtitle: 'Patna Jn (PNBE) • Physical Padlock #14A/B',
       dept: 'OPERATING' as Department,
-      officerId: 'SM_WDA_JCT',
+      officerId: 'SM_PNBE_01',
       stakeholder: sm,
     },
     {
       role: 'SECTION_CONTROLLER' as ApprovalRole,
       title: 'Section Controller Traffic Block',
-      subtitle: 'Nagpur Control Office • Line Headway Clearance',
+      subtitle: 'Danapur Control Office • Line Headway Clearance',
       dept: 'OPERATING' as Department,
-      officerId: 'CTRL_SEC_WDA_02',
+      officerId: 'CTRL_SEC_DNR_02',
       stakeholder: ctrl,
     },
     {
       role: 'FIELD_SUPERVISOR' as ApprovalRole,
-      title: 'Field ETR-3 Permit',
+      title: 'Field Form3-PTW Permit',
       subtitle: 'SSE / OHE Maintenance gang • Earth Rod Discharge',
       dept: 'OHE' as Department,
-      officerId: 'SSE_OHE_WDA_04',
+      officerId: 'SSE_OHE_DNR_04',
       stakeholder: sse,
     },
   ];

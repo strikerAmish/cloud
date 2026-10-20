@@ -48,9 +48,12 @@ class ApprovalRole(str, Enum):
 
 
 class PermitType(str, Enum):
+    FORM3_PTW = "FORM3_PTW"  # Form3-PTW: Field Permit-to-Work with Earthing Rods
+    ETR_3 = "ETR_3"  # Legacy alias for Form3-PTW
     ETR_1 = "ETR_1"  # Power Block Message (Traction de-energization)
-    ETR_3 = "ETR_3"  # Field Permit-to-Work with Earthing Rods
     RECONNECTION = "RECONNECTION"  # Reconnection Memo & Restoration
+    CIVIL_TRACK_BLOCK = "CIVIL_TRACK_BLOCK"
+    POINT_CLAMP_MEMO = "POINT_CLAMP_MEMO"
 
 
 class ApprovalStatus(str, Enum):
@@ -89,7 +92,7 @@ class Stakeholder(BaseModel):
 class StatutoryPermit(BaseModel):
     id: str
     event_id: str
-    permit_type: PermitType
+    permit_type: str
     earthing_discharged: bool = False
     power_tripped: bool = False
     points_clamped: bool = False
@@ -102,16 +105,16 @@ class StatutoryPermit(BaseModel):
 # Operational Event Payloads
 # -------------------------------------------------------------
 class OperationalEventCreate(BaseModel):
-    division: str = Field("NGP", description="Division, e.g., NGP (Nagpur)")
-    section: str = Field("Wardha-Sevagram", description="Section, e.g., Wardha-Sevagram")
+    division: str = Field("DNR", description="Division, e.g., DNR (Danapur)")
+    section: str = Field("Danapur–Patna Junction", description="Section, e.g., Danapur–Patna Junction")
     track_id: str = Field("UP_MAIN", description="Target Track: UP_MAIN, DN_MAIN, YARD_01")
-    km_start: float = Field(142.10, description="KM Start Geofence boundary")
-    km_end: float = Field(143.04, description="KM End Geofence boundary")
+    km_start: float = Field(544.10, description="KM Start Geofence boundary")
+    km_end: float = Field(545.80, description="KM End Geofence boundary")
     requested_start: datetime
     requested_end: datetime
     impact_vector: ImpactVector = Field(default_factory=ImpactVector)
     description: Optional[str] = "OHE Catenary Inspection and Contact Wire Replacement per ACTM Vol II Sec 20615"
-    originator_id: str = "SSE_OHE_WDA_04"
+    originator_id: str = "SSE_OHE_DNR_04"
 
 
 class ApprovalRequest(BaseModel):
@@ -162,7 +165,14 @@ class OperationalEventResponse(BaseModel):
     originator_id: str
     stakeholders: List[Stakeholder] = []
     permits: List[StatutoryPermit] = []
+    invariants: Optional[Dict[str, Any]] = None
     fsm_stage: int
+    status_color: Optional[str] = None
+    lock_info: Optional[Any] = None
+    field_photo: Optional[Dict[str, Any]] = None
+    piggybacked_depts: Optional[List[Dict[str, Any]]] = None
+    station_actions: Optional[Dict[str, Any]] = None
+    digital_permit: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
 

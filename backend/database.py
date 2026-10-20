@@ -102,7 +102,17 @@ def init_db():
 
     conn.commit()
 
-    # Seed baseline event if database is empty
+    # Purge legacy corridor data if present so database matches frontend
+    cursor.execute("SELECT COUNT(*) as cnt FROM operational_events WHERE division = 'NGP' OR section LIKE '%Wardha%'")
+    old_cnt = cursor.fetchone()["cnt"]
+    if old_cnt > 0:
+        cursor.execute("DELETE FROM statutory_permits")
+        cursor.execute("DELETE FROM event_stakeholders")
+        cursor.execute("DELETE FROM operational_events")
+        cursor.execute("DELETE FROM transactional_outbox")
+        conn.commit()
+
+    # Seed baseline events if database is empty
     cursor.execute("SELECT COUNT(*) as cnt FROM operational_events")
     count = cursor.fetchone()["cnt"]
 
@@ -114,18 +124,21 @@ def init_db():
 
 
 def seed_baseline_event(cursor):
-    sample_id = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
     now = datetime.now(timezone.utc)
     req_start = (now + timedelta(hours=1)).isoformat().replace("+00:00", "Z")
     req_end = (now + timedelta(hours=4)).isoformat().replace("+00:00", "Z")
 
+    # -------------------------------------------------------------
+    # Event 1: Danapur–Patna Junction (Stage 4 / Awaiting Approval)
+    # -------------------------------------------------------------
+    sample_id = "EVT-ENG-2026-00132"
     impact_vector = {
-        "catenary_25kv_power_trip": True,
+        "catenary_25kv_power_trip": False,
         "absolute_traffic_block": True,
         "speed_restriction_kmh": 30,
-        "feeding_posts": ["FP-04", "FP-06"],
+        "feeding_posts": [],
         "points_clamping_required": True,
-        "track_bonding_notice": True
+        "track_bonding_notice": False
     }
 
     cursor.execute("""
@@ -136,38 +149,33 @@ def seed_baseline_event(cursor):
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         sample_id,
-        "NGP",
-        "Wardha-Sevagram",
+        "DNR",
+        "Danapur–Patna Junction",
         "UP_MAIN",
-        142.10,
-        143.04,
+        156.40,
+        158.20,
         "AWAITING_APPROVAL",
         req_start,
         req_end,
-        892,
+        901,
         json.dumps(impact_vector),
-        "OHE Catenary Inspection & Contact Wire Replacement (ACTM Vol II Sec 20615)",
-        "SSE_OHE_WDA_04",
+        "Continuous Rail Ultrasonic Flaw Detection (USFD) & Heavy Ballast Tamping",
+        "SSE_PWAY_DNR_03",
         now.isoformat().replace("+00:00", "Z"),
         now.isoformat().replace("+00:00", "Z")
     ))
 
-    # Seed Stakeholders
-    stakeholders = [
-        (str(uuid.uuid4()), sample_id, "OHE", "TPC", "TPC_NGP_01", "APPROVED", "8f3ca9b12a4d81e997ed25519tpcngp01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), sample_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "PENDING", None, None, None),
-        (str(uuid.uuid4()), sample_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "b12a4d81e997ed25519smwardha01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), sample_id, "OHE", "FIELD_SUPERVISOR", "SSE_OHE_WDA_04", "PENDING", None, None, None),
-        (str(uuid.uuid4()), sample_id, "S_AND_T", "SIGNAL_INSPECTOR", "SSE_SIG_WDA_01", "APPROVED", "c45a4d81e997ed25519ssesig01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), sample_id, "CIVIL_P_WAY", "PERMANENT_WAY_ENG", "SSE_PWAY_SEGM_02", "APPROVED", "d67a4d81e997ed25519ssepway02", now.isoformat().replace("+00:00", "Z"), None)
-    ]
     cursor.executemany("""
     INSERT INTO event_stakeholders (
         id, event_id, department, role, officer_id, approval_status, signature_hash, signed_at, rejection_reason
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, stakeholders)
+    """, [
+        (str(uuid.uuid4()), sample_id, "CIVIL_P_WAY", "FIELD_SUPERVISOR", "SSE_PWAY_DNR_03", "APPROVED", "9f2c81e997ed25519pwaydnr01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), sample_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_DNR_02", "PENDING", None, None, None),
+        (str(uuid.uuid4()), sample_id, "OPERATING", "STATION_MASTER", "SM_PNBE_01", "APPROVED", "3e1b7194853641ef85smpnbe01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), sample_id, "OHE", "TPC", "TPC_DDU_01", "APPROVED", "1d4ed81e997ed25519tpcddu01", now.isoformat().replace("+00:00", "Z"), None)
+    ])
 
-    # Seed Permits
     cursor.execute("""
     INSERT INTO statutory_permits (
         id, event_id, permit_type, earthing_discharged, power_tripped, points_clamped, issued_at, officer_id, notes
@@ -175,16 +183,15 @@ def seed_baseline_event(cursor):
     """, (
         str(uuid.uuid4()),
         sample_id,
-        "ETR_1",
+        "POINT_CLAMP_MEMO",
+        0,
         0,
         1,
-        1,
         now.isoformat().replace("+00:00", "Z"),
-        "TPC_NGP_01",
-        "25kV Catenary Power Block Granted from Feeding Post FP-04 to FP-06"
+        "SM_PNBE_01",
+        "Points padlocked mechanically against Up Main crossover toward Patna Junction"
     ))
 
-    # Seed Transactional Outbox entry
     cursor.execute("""
     INSERT INTO transactional_outbox (
         id, event_id, event_type, payload, status
@@ -197,8 +204,18 @@ def seed_baseline_event(cursor):
         "COMMITTED"
     ))
 
-    # Event 2: S_AND_T Active Work
-    event2_id = "e82b7194-8536-41ef-85bc-f16cd2a01bf8"
+    # -------------------------------------------------------------
+    # Event 2: Danapur–Patna Junction (Stage 6 / Active on Track with Form3-PTW)
+    # -------------------------------------------------------------
+    event2_id = "EVT-OHE-2026-00301"
+    impact2 = {
+        "catenary_25kv_power_trip": True,
+        "absolute_traffic_block": True,
+        "speed_restriction_kmh": 20,
+        "feeding_posts": ["FP-04", "FP-06"],
+        "points_clamping_required": True,
+        "track_bonding_notice": True
+    }
     cursor.execute("""
     INSERT INTO operational_events (
         id, division, section, track_id, km_start, km_end, status,
@@ -207,18 +224,18 @@ def seed_baseline_event(cursor):
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         event2_id,
-        "NGP",
-        "Wardha-Sevagram",
+        "DNR",
+        "Danapur–Patna Junction",
         "UP_MAIN",
-        143.04,
-        143.50,
+        544.10,
+        545.80,
         "ACTIVE_IN_PROGRESS",
         req_start,
         req_end,
         893,
-        json.dumps({"points_clamping_required": True, "speed_restriction_kmh": 15, "signal_disconnection_memo": True}),
-        "Point Machine #14A Overhaul & Electronic Interlocking Lock (SWR Sec 8.4)",
-        "SSE_SIG_WDA_01",
+        json.dumps(impact2),
+        "25kV Catenary Contact Wire Replacement & Isolator Maintenance (ACTM 20615)",
+        "SSE_OHE_DNR_04",
         now.isoformat().replace("+00:00", "Z"),
         now.isoformat().replace("+00:00", "Z")
     ))
@@ -228,13 +245,34 @@ def seed_baseline_event(cursor):
         id, event_id, department, role, officer_id, approval_status, signature_hash, signed_at, rejection_reason
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, [
-        (str(uuid.uuid4()), event2_id, "S_AND_T", "SIGNAL_INSPECTOR", "SSE_SIG_WDA_01", "APPROVED", "sig893ssesig01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), event2_id, "OPERATING", "STATION_MASTER", "SM_WDA_JCT", "APPROVED", "sig893smwda01", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), event2_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "APPROVED", "sig893ctrl02", now.isoformat().replace("+00:00", "Z"), None)
+        (str(uuid.uuid4()), event2_id, "OHE", "FIELD_SUPERVISOR", "SSE_OHE_DNR_04", "APPROVED", "sig893sseohednr04", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event2_id, "OHE", "TPC", "TPC_DDU_01", "APPROVED", "sig893tpcddu01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event2_id, "OPERATING", "STATION_MASTER", "SM_PNBE_01", "APPROVED", "sig893smpnbe01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event2_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_DNR_02", "APPROVED", "sig893ctrldnr02", now.isoformat().replace("+00:00", "Z"), None)
     ])
 
-    # Event 3: CIVIL_P_WAY Approved Block
-    event3_id = "c31e9045-9247-49ef-97ce-b25ef3b12ce9"
+    cursor.executemany("""
+    INSERT INTO statutory_permits (
+        id, event_id, permit_type, earthing_discharged, power_tripped, points_clamped, issued_at, officer_id, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        (str(uuid.uuid4()), event2_id, "ETR_1", 0, 1, 0, now.isoformat().replace("+00:00", "Z"), "TPC_DDU_01", "Form ETR-1: 25kV Catenary Power Block Granted"),
+        (str(uuid.uuid4()), event2_id, "FORM3_PTW", 1, 0, 0, now.isoformat().replace("+00:00", "Z"), "SSE_OHE_DNR_04", "Form3-PTW: Earth discharge rods attached. Work authorized on track."),
+        (str(uuid.uuid4()), event2_id, "POINT_CLAMP_MEMO", 0, 0, 1, now.isoformat().replace("+00:00", "Z"), "SM_PNBE_01", "Points clamped and locked against Up Main at Patna Jn")
+    ])
+
+    # -------------------------------------------------------------
+    # Event 3: Ara Junction–Danapur (Stage 5 / Approved Block)
+    # -------------------------------------------------------------
+    event3_id = "EVT-SIG-2026-00214"
+    impact3 = {
+        "catenary_25kv_power_trip": False,
+        "absolute_traffic_block": True,
+        "speed_restriction_kmh": 15,
+        "feeding_posts": [],
+        "points_clamping_required": True,
+        "track_bonding_notice": False
+    }
     cursor.execute("""
     INSERT INTO operational_events (
         id, division, section, track_id, km_start, km_end, status,
@@ -243,18 +281,18 @@ def seed_baseline_event(cursor):
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         event3_id,
-        "NGP",
-        "Wardha-Sevagram",
-        "DN_MAIN",
-        144.00,
-        145.20,
+        "DNR",
+        "Ara Junction–Danapur",
+        "UP_MAIN",
+        590.20,
+        591.50,
         "APPROVED",
         req_start,
         req_end,
         894,
-        json.dumps({"absolute_traffic_block": True, "speed_restriction_kmh": 30, "track_tamping_machine": "CSM-952"}),
-        "Deep Ballast Track Tamping & Continuous Rail Testing (G&SR 4.12)",
-        "SSE_PWAY_SEGM_02",
+        json.dumps(impact3),
+        "Electronic Interlocking & Point Machine Overhaul (SWR Sec 8.4)",
+        "SSE_SIG_ARA_01",
         now.isoformat().replace("+00:00", "Z"),
         now.isoformat().replace("+00:00", "Z")
     ))
@@ -264,10 +302,27 @@ def seed_baseline_event(cursor):
         id, event_id, department, role, officer_id, approval_status, signature_hash, signed_at, rejection_reason
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, [
-        (str(uuid.uuid4()), event3_id, "CIVIL_P_WAY", "PERMANENT_WAY_ENG", "SSE_PWAY_SEGM_02", "APPROVED", "sig894ssepway02", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), event3_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_WDA_02", "APPROVED", "sig894ctrl02", now.isoformat().replace("+00:00", "Z"), None),
-        (str(uuid.uuid4()), event3_id, "OPERATING", "STATION_MASTER", "SM_SEGM_JCT", "APPROVED", "sig894smsegm01", now.isoformat().replace("+00:00", "Z"), None)
+        (str(uuid.uuid4()), event3_id, "S_AND_T", "FIELD_SUPERVISOR", "SSE_SIG_ARA_01", "APPROVED", "sig894ssesigara01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event3_id, "OPERATING", "SECTION_CONTROLLER", "CTRL_SEC_DNR_02", "APPROVED", "sig894ctrldnr02", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event3_id, "OPERATING", "STATION_MASTER", "SM_ARA_01", "APPROVED", "sig894smara01", now.isoformat().replace("+00:00", "Z"), None),
+        (str(uuid.uuid4()), event3_id, "OHE", "TPC", "TPC_DDU_01", "APPROVED", "sig894tpcddu01", now.isoformat().replace("+00:00", "Z"), None)
     ])
+
+    cursor.execute("""
+    INSERT INTO statutory_permits (
+        id, event_id, permit_type, earthing_discharged, power_tripped, points_clamped, issued_at, officer_id, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        str(uuid.uuid4()),
+        event3_id,
+        "POINT_CLAMP_MEMO",
+        0,
+        0,
+        1,
+        now.isoformat().replace("+00:00", "Z"),
+        "SM_ARA_01",
+        "Mechanical point clamp applied and padlocked at Ara Jn"
+    ))
 
 
 # Initialize the database immediately

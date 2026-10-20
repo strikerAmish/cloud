@@ -127,10 +127,10 @@ export const AuditLedgerView: React.FC = () => {
       // 2. Section filter
       if (selectedSection !== 'ALL') {
         const evId = b.event_id.toUpperCase();
-        if (selectedSection === 'SEGM_PUL' && !evId.includes('00082') && !evId.includes('PUL')) return false;
-        if (selectedSection === 'WDA_SEGM' && !evId.includes('00088') && !evId.includes('00062') && !evId.includes('WDA')) return false;
-        if (selectedSection === 'NGP_WDA' && !evId.includes('00075') && !evId.includes('00058') && !evId.includes('NW')) return false;
-        if (selectedSection === 'NGP_SEGM' && !evId.includes('00069') && !evId.includes('NS')) return false;
+        if (selectedSection === 'DNR_PNBE' && !evId.includes('00082') && !evId.includes('PNBE') && !evId.includes('DNR') && !evId.includes('PUL')) return false;
+        if (selectedSection === 'ARA_DNR' && !evId.includes('00088') && !evId.includes('00062') && !evId.includes('ARA') && !evId.includes('WDA')) return false;
+        if (selectedSection === 'BXR_ARA' && !evId.includes('00075') && !evId.includes('00058') && !evId.includes('BXR') && !evId.includes('NW')) return false;
+        if (selectedSection === 'DDU_BXR' && !evId.includes('00069') && !evId.includes('DDU') && !evId.includes('NS')) return false;
       }
 
       // 3. Department filter
@@ -218,7 +218,7 @@ export const AuditLedgerView: React.FC = () => {
             Immutable SHA-256 Hash-Chained Statutory Register
           </h1>
           <p style={{ fontSize: 12.5, color: '#64748B', margin: 0 }}>
-            Official Central Railway (CR) Corridor Audit Register. Compliant with Commissioner of Railway Safety (CRS) inquiries.
+            Official East Central Railway (ECR) Corridor Audit Register • Danapur & DDU Divisions (Patna Jn Hub). Compliant with Commissioner of Railway Safety (CRS) inquiries.
           </p>
         </div>
 
@@ -428,11 +428,11 @@ export const AuditLedgerView: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              <option value="ALL">All Corridor Sections</option>
-              <option value="SEGM_PUL">Sevagram – Pulgaon (UP MAIN)</option>
-              <option value="WDA_SEGM">Wardha – Sevagram (UP MAIN)</option>
-              <option value="NGP_WDA">Nagpur – Wardha (DN MAIN)</option>
-              <option value="NGP_SEGM">Nagpur – Sevagram (UP MAIN)</option>
+              <option value="ALL">All Corridor Sections (Patna &amp; DDU / Danapur)</option>
+              <option value="DNR_PNBE">Danapur – Patna Junction (UP MAIN)</option>
+              <option value="ARA_DNR">Ara Junction – Danapur (UP MAIN)</option>
+              <option value="BXR_ARA">Buxar – Ara Junction (UP MAIN)</option>
+              <option value="DDU_BXR">Pt. Deen Dayal Upadhyaya – Buxar (DN MAIN)</option>
             </select>
           </div>
 

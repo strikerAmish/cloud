@@ -22,43 +22,43 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 }) => {
   const sectionsSummary = [
     {
-      id: 'SEGM_PUL',
-      name: 'Sevagram – Pulgaon',
-      track: 'UP MAIN (KM 152.00 – 162.00)',
+      id: 'DNR_PNBE',
+      name: 'Danapur – Patna Junction',
+      track: 'UP MAIN (KM 548.00 – 554.00)',
       activeBlocks: 1,
       pendingApprovals: 2,
-      powerStatus: 'Normal (Feeding Post FP-06)',
+      powerStatus: 'Normal (Patna TSS FP-02)',
       statusLabel: 'Active Work & Approvals Pending',
       statusColor: '#F59E0B',
     },
     {
-      id: 'WDA_SEGM',
-      name: 'Wardha – Sevagram',
-      track: 'UP MAIN (KM 141.20 – 144.00)',
+      id: 'ARA_DNR',
+      name: 'Ara Junction – Danapur',
+      track: 'UP MAIN (KM 585.00 – 602.00)',
       activeBlocks: 1,
       pendingApprovals: 2,
-      powerStatus: 'Isolated (Feeding Post FP-04)',
-      statusLabel: 'ETR-3 Power Block Active',
+      powerStatus: 'Isolated (Danapur Grid FP-03)',
+      statusLabel: 'Form3-PTW Possession Active',
       statusColor: '#2563EB',
     },
     {
-      id: 'NGP_WDA',
-      name: 'Nagpur – Wardha',
-      track: 'DN MAIN (KM 110.00 – 123.00)',
+      id: 'BXR_ARA',
+      name: 'Buxar – Ara Junction',
+      track: 'UP MAIN (KM 630.00 – 650.00)',
       activeBlocks: 1,
       pendingApprovals: 2,
-      powerStatus: 'Normal (Feeding Post FP-02)',
-      statusLabel: 'Axle Counter Replacement',
+      powerStatus: 'Normal (Buxar Sub FP-04)',
+      statusLabel: 'Axle Counter & Rail Overhaul',
       statusColor: '#3B82F6',
     },
     {
-      id: 'NGP_SEGM',
-      name: 'Nagpur – Sevagram',
-      track: 'UP MAIN (KM 72.00 – 86.50)',
+      id: 'DDU_BXR',
+      name: 'Pt. Deen Dayal Upadhyaya – Buxar',
+      track: 'DN MAIN (KM 670.00 – 690.00)',
       activeBlocks: 1,
       pendingApprovals: 2,
-      powerStatus: 'Normal (Feeding Post FP-01)',
-      statusLabel: 'Bridge Fastening & Welds',
+      powerStatus: 'Normal (DDU Marshalling FP-01)',
+      statusLabel: 'Bridge Fastening & Track Welds',
       statusColor: '#10B981',
     },
   ];
@@ -93,7 +93,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 border: '1px solid #BFDBFE',
               }}
             >
-              CENTRAL RAILWAY • NAGPUR DIVISION
+              EAST CENTRAL RAILWAY • DANAPUR &amp; DDU DIVISION (PATNA JN)
             </span>
             <span
               style={{
