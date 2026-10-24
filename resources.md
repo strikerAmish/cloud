@@ -220,3 +220,126 @@ CREATE INDEX IF NOT EXISTS idx_queries_event ON operational_queries(event_id);
 2. **Step 2:** Mount HTML5 Geolocation API (`navigator.geolocation.watchPosition`) and Camera Input (`<input type="file" accept="image/*" capture="environment">`).
 3. **Step 3:** Connect to `/ws/corridor` for real-time push alerts to the mobile screen.
 4. **Step 4:** Leverage local `IndexedDB` or SQLite for offline requisition caching.
+
+---
+
+## 9. Statutory Safety Restriction Protocols & Incident Mitigation Matrix for Ongoing Works
+
+### 9.1 Overview & Indian Railways Regulatory Mandate
+When track maintenance or engineering work transitions to `ACTIVE_IN_PROGRESS` (FSM Stage 5/6), Indian Railways General & Subsidiary Rules (G&SR), the Indian Railways Permanent Way Manual (IRPWM), and the AC Traction Manual (ACTM Vol II) mandate strict, multi-layered statutory restrictions. 
+
+In RailSync, clicking the **Track Possession Active** or **Safety Restrictions Banner** triggers an exhaustive, real-time **Statutory Safety Restriction & Mitigation Protocol Report (Form 3-PTW)**. This report dynamically derives restrictions based on the selected event's `impact_vector`, `permits`, `invariants`, and `department`.
+
+---
+
+### 9.2 Four-Pillar Statutory Safety Restriction Framework
+
+```
++--------------------------------------------------------------------------------------------------+
+|                     RAILSYNC FOUR-PILLAR STATUTORY SAFETY RESTRICTION ENVELOPE                    |
++---------------------------------+----------------------------------------------------------------+
+| 1. Interlocking & Point Clamps   | • Facing points clamped with mechanical screw clamps & padlocked|
+|    (G&SR 15.06 / SWR 8.4)       | • Point keys deposited in Station Master custody box            |
+|                                 | • Reversing routes electronically blocked via Central Interlock|
++---------------------------------+----------------------------------------------------------------+
+| 2. Traction Power Isolation     | • 25kV AC catenary circuit breaker tripped at Feeding Post (FP)|
+|    (ACTM Vol II / Form ETR-1)   | • SCADA remote lock applied with auto-reclosure disabled       |
+|                                 | • 2x Discharge Earthing Rods clamped to rails & contact wire   |
++---------------------------------+----------------------------------------------------------------+
+| 3. Traffic Movement Protection  | • Absolute line block entered in Train Register Book (T/351)   |
+|    (G&SR 15.09 / Caution Orders)| • Banner flags posted at 600m; 3 detonators placed at 1200m     |
+|                                 | • Adjacent line Temporary Speed Restriction (TSR 20/30 km/h)   |
++---------------------------------+----------------------------------------------------------------+
+| 4. Men & Machinery Envelope     | • Track machine (e.g., CSM-952) secured within fouling marks   |
+|    (IRPWM Para 808 / PPE Audit) | • Lookout men posted with klaxon horns & hand hazard flags     |
+|                                 | • Biometric/Geo-fence quorum verified for maintenance gang      |
++---------------------------------+----------------------------------------------------------------+
+```
+
+---
+
+### 9.3 Department-Specific Safety Restriction Mapping for Ongoing Works
+
+The ongoing works in the Danapur–Patna corridor trigger specific restriction profiles:
+
+| Work ID | Department & Activity | Primary Safety Measures Applied | Statutory Restrictions Imposed |
+| :--- | :--- | :--- | :--- |
+| **`EVT-ENG-2026-00109`** | **Civil P-Way**<br>CSM-952 Track Tamping Machine Live Profiling (KM 154–156) | • Point #14A clamped & padlocked<br>• Banner flags posted at 600m & 1200m<br>• Machine clearance gauge monitored | • **Absolute Block:** Up Main blocked to all traffic<br>• **Adjacent Line TSR:** 20 km/h on Down Main<br>• **OHE Buffer:** 2.0m clearance from live 25kV wire |
+| **`EVT-OHE-2026-00104`** | **Traction / OHE**<br>Emergency Catenary Contact Wire Splicing (KM 141.2–142.0) | • 25kV Power Cut at FP-04 (Form ETR-1)<br>• Dual earthing discharge rods clamped 100m upstream/downstream<br>• Tower Wagon 04 positioned | • **Catenary Isolation:** 0.0 kV dead line<br>• **Traffic Block:** Complete line isolation<br>• **Adjacent Track TSR:** 30 km/h caution order |
+| **`EVT-SIG-2026-00114`** | **Signal & Telecom (S&T)**<br>Digital Axle Counter Head Replacement (KM 118–119.5) | • Disconnection notice Form S&T-14 served<br>• Detector blade mechanical locking<br>• Shunt resistance verification | • **Signal Interlock:** Signals 12 & 14 locked at Danger<br>• **Movement Restriction:** Pilot movements on PLCT only<br>• **Speed Restriction:** 30 km/h through point zone |
+| **`EVT-PWY-2026-00116`** | **Bridges & Civil**<br>Bridge #38 Ballast Wall Concrete Casting (KM 72.0–74.5) | • Pier scaffolding safety envelope checked<br>• Lookout men with whistles posted 500m both directions<br>• Approach crossover clamped | • **Speed Restriction:** TSR 30 km/h over bridge<br>• **Track Block:** Up line blocked during concrete pour<br>• **Vibration Isolation:** Heavy freight deferred |
+
+---
+
+### 9.4 Data Architecture for Interactive Safety Report
+
+The interactive report modal consumes data from `OperationalEvent`:
+
+```typescript
+export interface StatutorySafetyReport {
+  eventId: string;
+  section: string;
+  trackId: string;
+  chainage: string;
+  department: string;
+  fsmStage: number;
+  status: string;
+  issuedAt: string;
+  validUntil: string;
+  custodianOfficer: string;
+  
+  // Restriction Pillars
+  interlockingIsolation: {
+    pointsClamped: boolean;
+    pointNumbers: string[];
+    padlockKeyId: string;
+    routeLockStatus: string;
+  };
+  tractionPowerIsolation: {
+    powerTripped: boolean;
+    catenaryVoltageKv: number;
+    feedingPosts: string[];
+    earthingDischargeRods: number;
+    permitForm: string; // Form ETR-1 / Form3-PTW
+    scadaBreakerId: string;
+  };
+  trafficMovementRestrictions: {
+    absoluteBlock: boolean;
+    tsrSpeedKmh: number;
+    adjacentLineRestriction: string;
+    bannerFlagDistanceM: number;
+    detonatorsPlaced: number;
+    cautionOrderNoticeNumber: string;
+  };
+  siteProtectionEnvelope: {
+    machineryDeployed: string;
+    foulingMarkClearanceM: number;
+    lookoutMenCount: number;
+    gangCrewCount: number;
+    emergencyHotline: string;
+  };
+  cryptographicSignatures: Array<{
+    role: string;
+    officerId: string;
+    hash: string;
+    timestamp: string;
+  }>;
+}
+```
+
+---
+
+### 9.5 Interactive UI UX Design for the Safety Banner
+
+1. **Interactive Trigger:**
+   - The red top banner (`#corridor-awareness-banner`) in [`RightActionPane.tsx`](file:///c:/Users/toami/Desktop/Intro_Chemical%203007/frontend/src/components/RightActionPane.tsx) is clickable with hover elevation (`transform: translateY(-1px)`, subtle ring outline, pointer cursor).
+   - An interactive badge is displayed: `🔍 Click for Statutory Safety & Restriction Protocol Report`.
+   - The individual telemetry badges (`📍 Section`, `⚡ Catenary`, `🔒 Interlocking`, `🚆 Train Traffic`) also serve as deep-links into specific protocol sections.
+
+2. **Modal Experience:**
+   - Full-bleed statutory Form 3-PTW certificate layout with official Indian Railways emblem header styling.
+   - Live status badges for each restriction pillar (Active Interlock, 25kV Dead Line, Speed Restriction, Detonator Layout).
+   - Real-time chainage schematic showing where the machine is operating and where warning flags/detonators are posted.
+   - Statutory Officer Sign-off Ledger with cryptographic SHA-256 hashes verifying compliance.
+   - Action buttons: *"Print / Export Form 3-PTW Certificate"* and *"Station Master Emergency Hotline"*.
+

@@ -4,7 +4,8 @@ import {
   Clock, ShieldAlert, AlertOctagon, Database, ExternalLink,
   Lock, Unlock, Activity, Camera, MapPin, Users, Plus,
   Share2, Printer, X, Eye, Zap, ShieldCheck, ArrowRight,
-  AlertTriangle, RotateCcw, ChevronLeft, ChevronRight
+  AlertTriangle, RotateCcw, ChevronLeft, ChevronRight,
+  FileText, Flag, Radio, Phone, Info
 } from 'lucide-react';
 import { OperationalEvent, ApprovalRole, Department, PiggybackedDepartment } from '../types';
 import {
@@ -76,6 +77,8 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
   // Modals for Photo Inspection & Official Permit Memo
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showPermitModal, setShowPermitModal] = useState(false);
+  const [showSafetyReportModal, setShowSafetyReportModal] = useState(false);
+  const [activeSafetyTab, setActiveSafetyTab] = useState<'summary' | 'interlocking' | 'catenary' | 'traffic' | 'machinery' | 'signatures'>('summary');
 
   // Rejection memo
   const [rejectionCode, setRejectionCode] = useState('');
@@ -325,164 +328,227 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
         gap: 20,
       }}
     >
-      {/* ── REAL-TIME CORRIDOR AWARENESS BANNER (Single Glance State) ── */}
+      {/* ── Operational Corridor Awareness & Safety Status Strip ── */}
       <div
         id="corridor-awareness-banner"
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          setShowSafetyReportModal(true);
+          setActiveSafetyTab('summary');
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            setShowSafetyReportModal(true);
+            setActiveSafetyTab('summary');
+          }
+        }}
         style={{
-          borderRadius: 10,
-          border: isOngoing
-            ? '2px solid #EF4444'
+          borderRadius: 8,
+          border: '1px solid #E2E8F0',
+          borderLeft: isOngoing
+            ? '4px solid #DC2626'
             : isNormalized
-            ? '2px solid #22C55E'
+            ? '4px solid #16A34A'
             : isApproved
-            ? '2px solid #3B82F6'
-            : '2px solid #F59E0B',
-          background: isOngoing
-            ? '#FEF2F2'
-            : isNormalized
-            ? '#F0FDF4'
-            : isApproved
-            ? '#EFF6FF'
-            : '#FFFBEB',
+            ? '4px solid #2563EB'
+            : '4px solid #D97706',
+          background: '#FFFFFF',
           padding: '14px 18px',
-          boxShadow: isOngoing
-            ? '0 3px 12px rgba(239, 68, 68, 0.12)'
-            : '0 1px 4px rgba(0,0,0,0.03)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+          outline: 'none',
         }}
+        title="Click to view detailed statutory safety measures and restriction protocols (Form 3-PTW)"
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '4px 12px',
-                borderRadius: 99,
-                fontWeight: 800,
-                fontSize: 12,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
+                padding: '3px 10px',
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 11.5,
                 background: isOngoing
-                  ? '#DC2626'
+                  ? '#FEF2F2'
                   : isNormalized
-                  ? '#16A34A'
+                  ? '#F0FDF4'
                   : isApproved
-                  ? '#2563EB'
-                  : '#D97706',
-                color: '#FFFFFF',
+                  ? '#EFF6FF'
+                  : '#FFFBEB',
+                color: isOngoing
+                  ? '#991B1B'
+                  : isNormalized
+                  ? '#166534'
+                  : isApproved
+                  ? '#1E40AF'
+                  : '#92400E',
+                border: `1px solid ${
+                  isOngoing
+                    ? '#FECACA'
+                    : isNormalized
+                    ? '#BBF7D0'
+                    : isApproved
+                    ? '#BFDBFE'
+                    : '#FDE68A'
+                }`,
               }}
             >
               <span
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   borderRadius: '50%',
-                  background: '#FFFFFF',
+                  background: isOngoing
+                    ? '#DC2626'
+                    : isNormalized
+                    ? '#16A34A'
+                    : isApproved
+                    ? '#2563EB'
+                    : '#D97706',
                 }}
               />
               {isOngoing
-                ? '🔴 TRACK POSSESSION ACTIVE'
+                ? 'Track Possession Active'
                 : isNormalized
-                ? '🟢 READY FOR NORMAL TRAIN TRAFFIC'
+                ? 'Line Normalized'
                 : isApproved
-                ? '🔵 APPROVED (READY FOR POSSESSION)'
-                : '🟡 AWAITING STATUTORY SIGN-OFF'}
+                ? 'Approved for Possession'
+                : 'Awaiting Approvals'}
             </span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
               {isOngoing
-                ? 'LINE BLOCKED — MEN & MACHINERY ON TRACK'
+                ? 'Line Blocked — Maintenance in Progress'
                 : isNormalized
-                ? 'LINE NORMALIZED — FIT FOR FULL LINE SPEED'
+                ? 'Track Normalized — Fit for Permitted Line Speed'
                 : isApproved
-                ? 'ALL APPROVALS GRANTED — OCCUPANCY PERMITTED'
-                : 'STATUTORY APPROVAL QUORUM PENDING'}
+                ? 'All Approvals Granted — Ready for Possession'
+                : 'Statutory Approval Quorum Pending'}
             </span>
           </div>
 
-          {/* Quick Corridor Progression Direct Action */}
-          <div>
+          {/* Quick Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              id="view-safety-restrictions-report-btn"
+              onClick={e => {
+                e.stopPropagation();
+                setShowSafetyReportModal(true);
+                setActiveSafetyTab('summary');
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '5px 11px',
+                borderRadius: 6,
+                border: '1px solid #CBD5E1',
+                background: '#F8FAFC',
+                color: '#1E40AF',
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <FileText size={13} color="#2563EB" /> Safety &amp; Restriction Report
+            </button>
+
             {isOngoing && (
               <button
                 type="button"
-                onClick={() => handleAdvanceStage(7)}
+                onClick={e => {
+                  e.stopPropagation();
+                  handleAdvanceStage(7);
+                }}
                 id="quick-normalize-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '7px 14px',
+                  gap: 5,
+                  padding: '5px 12px',
                   borderRadius: 6,
                   border: 'none',
                   background: '#16A34A',
                   color: '#FFFFFF',
-                  fontSize: 12,
-                  fontWeight: 700,
+                  fontSize: 11.5,
+                  fontWeight: 600,
                   cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(22,163,74,0.25)',
                 }}
               >
-                <CheckCircle2 size={14} /> Normalize Track (➔ Stage 7)
+                <CheckCircle2 size={13} /> Normalize Track
               </button>
             )}
             {isApproved && (
               <button
                 type="button"
-                onClick={() => handleAdvanceStage(6)}
+                onClick={e => {
+                  e.stopPropagation();
+                  handleAdvanceStage(6);
+                }}
                 id="quick-activate-possession-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '7px 14px',
+                  gap: 5,
+                  padding: '5px 12px',
                   borderRadius: 6,
                   border: 'none',
                   background: '#DC2626',
                   color: '#FFFFFF',
-                  fontSize: 12,
-                  fontWeight: 700,
+                  fontSize: 11.5,
+                  fontWeight: 600,
                   cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(220,38,38,0.25)',
                 }}
               >
-                <Zap size={14} /> Grant Possession &amp; Cut Power (➔ Stage 6)
+                <Zap size={13} /> Grant Possession
               </button>
             )}
             {!isOngoing && !isApproved && !isNormalized && dualKeyCleared && (
               <button
                 type="button"
-                onClick={() => handleAdvanceStage(5)}
+                onClick={e => {
+                  e.stopPropagation();
+                  handleAdvanceStage(5);
+                }}
                 id="quick-approve-fsm-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '7px 14px',
+                  gap: 5,
+                  padding: '5px 12px',
                   borderRadius: 6,
                   border: 'none',
                   background: '#2563EB',
                   color: '#FFFFFF',
-                  fontSize: 12,
-                  fontWeight: 700,
+                  fontSize: 11.5,
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
-                <CheckCircle2 size={14} /> Advance to Approved (➔ Stage 5)
+                <CheckCircle2 size={13} /> Advance to Approved
               </button>
             )}
             {isNormalized && (
               <button
                 type="button"
-                onClick={() => handleAdvanceStage(6)}
+                onClick={e => {
+                  e.stopPropagation();
+                  handleAdvanceStage(6);
+                }}
                 id="quick-reopen-possession-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 5,
-                  padding: '6px 12px',
+                  padding: '5px 11px',
                   borderRadius: 6,
                   border: '1px solid #CBD5E1',
                   background: '#FFFFFF',
@@ -492,49 +558,81 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                <RotateCcw size={12} /> Re-open Active Possession
+                <RotateCcw size={12} /> Re-open Possession
               </button>
             )}
           </div>
         </div>
 
         {/* Operational Directive Details */}
-        <div style={{ fontSize: 11.5, color: '#334155', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
           {isOngoing && (
             <span>
-              <strong>Station Master Directive (G&amp;SR 15.06):</strong> Line possession is active under Form3-PTW. 25kV catenary isolated. Points clamped against target track. <strong>ALL TRAIN MOVEMENTS INTO THIS CORRIDOR BLOCK ARE STRICTLY PROHIBITED.</strong>
+              <strong>Station Master Directive (G&amp;SR 15.06):</strong> Line possession is active under Form 3-PTW. 25kV catenary isolated. Points clamped against target track. Train movements into this block section are prohibited.
             </span>
           )}
           {isNormalized && (
             <span>
-              <strong>Corridor Directive (G&amp;SR 15.17):</strong> Work completed, earth discharge rods removed, 25kV traction re-energized, point clamps removed. <strong>TRACK FIT CERTIFICATE SEALED — CORRIDOR IS READY FOR NORMAL TRAIN HEADWAY.</strong>
+              <strong>Corridor Directive (G&amp;SR 15.17):</strong> Work completed, discharge rods removed, 25kV traction re-energized, point clamps removed. Track Fit Certificate sealed.
             </span>
           )}
           {isApproved && (
             <span>
-              <strong>Pre-Possession Status:</strong> Multi-officer statutory authorizations (TPC, Section Controller &amp; SM) have been granted. Fencing token acquired. Ready to trip feeding post breaker and issue field Form3-PTW.
+              <strong>Pre-Possession Status:</strong> Statutory authorizations granted. Fencing token acquired. Ready to trip feeding post breaker and issue Form 3-PTW.
             </span>
           )}
           {!isOngoing && !isApproved && !isNormalized && (
             <span>
-              <strong>Requisition Queue Status:</strong> Requisition memo is undergoing inter-departmental quorum reviews. Normal train movements currently continue under caution order.
+              <strong>Requisition Queue Status:</strong> Requisition memo is undergoing quorum reviews. Normal train movements currently continue under caution order.
             </span>
           )}
         </div>
 
         {/* Real-time Telemetry & Interlocking Status Strip */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingTop: 2 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#0F172A' }}>
-            📍 {event.section} ({event.track_id.replace(/_/g, ' ')})
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 2 }}>
+          <span
+            onClick={e => {
+              e.stopPropagation();
+              setShowSafetyReportModal(true);
+              setActiveSafetyTab('summary');
+            }}
+            title="Section and track assignment"
+            style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: '#F8FAFC', border: '1px solid #E2E8F0', color: '#334155' }}
+          >
+            Section: <strong>{event.section} ({event.track_id.replace(/_/g, ' ')})</strong>
           </span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#FEE2E2' : '#F1F5F9', border: `1px solid ${isOngoing ? '#FCA5A5' : '#CBD5E1'}`, color: isOngoing ? '#991B1B' : '#475569' }}>
-            ⚡ Catenary: {isOngoing ? '25kV Isolated & Grounded' : isNormalized ? '26.4 kV Nominal (Energized)' : 'Energized'}
+          <span
+            onClick={e => {
+              e.stopPropagation();
+              setShowSafetyReportModal(true);
+              setActiveSafetyTab('catenary');
+            }}
+            title="Catenary power block telemetry"
+            style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: '#F8FAFC', border: '1px solid #E2E8F0', color: '#334155' }}
+          >
+            Catenary: <strong>{isOngoing ? '25kV Isolated & Grounded' : isNormalized ? '26.4 kV Nominal' : 'Energized'}</strong>
           </span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#FEE2E2' : '#F1F5F9', border: `1px solid ${isOngoing ? '#FCA5A5' : '#CBD5E1'}`, color: isOngoing ? '#991B1B' : '#475569' }}>
-            🔒 Interlocking: {isOngoing ? 'Padlocked (#14A Reverse Clamped)' : isNormalized ? 'Restored to Central Interlocking' : 'Normal Routes'}
+          <span
+            onClick={e => {
+              e.stopPropagation();
+              setShowSafetyReportModal(true);
+              setActiveSafetyTab('interlocking');
+            }}
+            title="Mechanical point clamping"
+            style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: '#F8FAFC', border: '1px solid #E2E8F0', color: '#334155' }}
+          >
+            Interlocking: <strong>{isOngoing ? 'Padlocked (#14A Reverse Clamped)' : isNormalized ? 'Restored to Central Interlocking' : 'Normal Routes'}</strong>
           </span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: isOngoing ? '#DC2626' : isNormalized ? '#16A34A' : '#2563EB', color: '#FFFFFF' }}>
-            🚆 Train Traffic: {isOngoing ? 'PROHIBITED / BLOCKED' : isNormalized ? 'PERMITTED (NORMAL HEADWAY)' : 'RUNNING (SCHEDULED)'}
+          <span
+            onClick={e => {
+              e.stopPropagation();
+              setShowSafetyReportModal(true);
+              setActiveSafetyTab('traffic');
+            }}
+            title="Train movement restrictions"
+            style={{ fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 4, background: '#F8FAFC', border: '1px solid #E2E8F0', color: isOngoing ? '#991B1B' : '#166534' }}
+          >
+            Train Traffic: <strong>{isOngoing ? 'Prohibited / Blocked' : isNormalized ? 'Permitted (Normal Headway)' : 'Running (Scheduled)'}</strong>
           </span>
         </div>
       </div>
@@ -2130,6 +2228,661 @@ export const RightActionPane: React.FC<RightActionPaneProps> = ({
           </div>
         </div>
       )}
+
+      {/* ── Modal 4: Comprehensive Statutory Safety Restriction & Protocol Report (Form 3-PTW) ── */}
+      {showSafetyReportModal && (() => {
+        const isEng = event.id === 'EVT-ENG-2026-00109' || event.id.includes('ENG') || event.id.includes('PWY') || event.description?.toLowerCase().includes('tamping');
+        const isOhe = event.id === 'EVT-OHE-2026-00104' || event.id.includes('OHE') || Boolean(event.impact_vector?.catenary_25kv_power_trip);
+        const isSig = event.id === 'EVT-SIG-2026-00114' || event.id.includes('SIG') || event.id.includes('SNT');
+        const isBridge = event.id === 'EVT-PWY-2026-00116' || event.description?.toLowerCase().includes('bridge');
+
+        const permitNo = `PTW-${event.division || 'DNR'}-2026-${event.fencing_token || '885'}`;
+        const cautionOrderNo = `CO/DNR/2026/T-${event.fencing_token || '885'}`;
+        const trbEntryNo = `TRB-ECR-DNR-2026-00${event.fencing_token || '885'}`;
+
+        const isPowerTripped = event.impact_vector?.catenary_25kv_power_trip ?? (isOhe ? true : false);
+        const feedingPost = event.impact_vector?.feeding_posts?.length
+          ? event.impact_vector.feeding_posts.join(', ')
+          : isOhe
+          ? 'FP-04 (Ara Feeding Post)'
+          : 'FP-02 (Danapur Substation)';
+        const catenaryVoltage = isPowerTripped ? '0.00 kV (Dead Line Isolated & Grounded)' : '25.8 kV Nominal (Active • 2.0m Safety Buffer Strictly Enforced)';
+        const earthingRodsCount = isPowerTripped ? 2 : 0;
+        const breakerStatus = isPowerTripped ? 'CB-201 Tripped & Padlocked via SCADA' : 'CB-201 Closed (Nominal Feed)';
+
+        const pointNumber = isOhe ? 'Point #08B' : isSig ? 'Point #03 (Detector Blades)' : isBridge ? 'Point #22 (Approach)' : 'Point #14A (Up Crossover)';
+        const clampSerial = `CLMP-${event.division || 'DNR'}-2026-${isOhe ? '08B' : '14A'}`;
+        const padlockKeyId = `KEY-SM-${isOhe ? 'ARA-08B' : 'PNBE-14A'}`;
+        const routeLockId = `EI-LK-DNR-0${event.fencing_token || '885'}`;
+
+        const isAbsoluteBlock = event.impact_vector?.absolute_traffic_block ?? true;
+        const tsrSpeed = event.impact_vector?.speed_restriction_kmh || (isEng ? 20 : isSig ? 30 : 30);
+        const adjacentTrackName = event.track_id === 'UP_MAIN' ? 'DOWN MAIN' : 'UP MAIN';
+
+        const machineName = isEng
+          ? 'Plasser & Theurer Continuous Action Tamping Machine (CSM-952)'
+          : isOhe
+          ? 'Self-Propelled 8-Wheeler Tower Wagon 04 (Contact Wire Splicing Unit)'
+          : isSig
+          ? 'Multi-Channel Digital Axle Counter Calibration & High-Frequency Tuning Rig'
+          : isBridge
+          ? 'Mobile Ballast Concrete Mixer & Hydraulic Boom Pump Rig'
+          : 'Track Maintenance Gang & Rail Flaw Ultrasonic Detector (USFD)';
+
+        const crewCount = event.field_photo?.crew_count || (isBridge ? 12 : isEng ? 10 : isOhe ? 7 : 5);
+        const lookoutMenCount = 2;
+        const foulingClearance = 4.26; // meters
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.6)',
+              zIndex: 1100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 20,
+              backdropFilter: 'blur(2px)',
+            }}
+            onClick={() => setShowSafetyReportModal(false)}
+          >
+            <div
+              style={{
+                background: '#FFFFFF',
+                borderRadius: 10,
+                maxWidth: 880,
+                width: '100%',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #CBD5E1',
+                overflow: 'hidden',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header: Clean Enterprise Style */}
+              <div
+                style={{
+                  background: '#F8FAFC',
+                  borderBottom: '1px solid #E2E8F0',
+                  padding: '16px 22px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    INDIAN RAILWAYS • EAST CENTRAL RAILWAY (DANAPUR DIVISION)
+                  </div>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: '3px 0 2px' }}>
+                    Safety Restriction &amp; Protection Protocol (Form 3-PTW)
+                  </h2>
+                  <div style={{ fontSize: 12, color: '#64748B' }}>
+                    Statutory Directives under G&amp;SR 15.06 &amp; 15.09 • Permit: <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{permitNo}</span> • Token: #{event.fencing_token || '885'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '6px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #CBD5E1',
+                      background: '#FFFFFF',
+                      color: '#334155',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                    title="Print or export official Form 3-PTW Certificate"
+                  >
+                    <Printer size={13} /> Print Certificate
+                  </button>
+                  <button
+                    onClick={() => setShowSafetyReportModal(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748B',
+                      padding: 4,
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Work Context Strip */}
+              <div
+                style={{
+                  background: '#FFFFFF',
+                  borderBottom: '1px solid #E2E8F0',
+                  padding: '12px 22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
+                    {event.id} — {event.description}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                    Section: <strong>{event.section}</strong> ({event.track_id.replace(/_/g, ' ')}) • Chainage: <strong>KM {event.km_start.toFixed(3)}</strong> to <strong>KM {event.km_end.toFixed(3)}</strong> • Custodian: <strong>{supervisorName}</strong>
+                  </div>
+                </div>
+
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '3px 10px',
+                    borderRadius: 6,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    background: isOngoing ? '#FEF2F2' : '#F0FDF4',
+                    color: isOngoing ? '#991B1B' : '#166534',
+                    border: `1px solid ${isOngoing ? '#FECACA' : '#BBF7D0'}`,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: isOngoing ? '#DC2626' : '#16A34A',
+                    }}
+                  />
+                  {isOngoing ? 'Track Possession Active' : 'Line Normalized'}
+                </span>
+              </div>
+
+              {/* Horizontal Tabs */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#F8FAFC',
+                  borderBottom: '1px solid #E2E8F0',
+                  padding: '0 16px',
+                  gap: 4,
+                  overflowX: 'auto',
+                }}
+              >
+                {[
+                  { id: 'summary', label: 'Overview' },
+                  { id: 'interlocking', label: 'Point Interlocking' },
+                  { id: 'catenary', label: 'Traction Power (25kV)' },
+                  { id: 'traffic', label: 'Speed & Movement' },
+                  { id: 'machinery', label: 'Site Safety & Clearance' },
+                  { id: 'signatures', label: 'Statutory Approvals' },
+                ].map(tab => {
+                  const isActive = activeSafetyTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSafetyTab(tab.id as any)}
+                      style={{
+                        padding: '10px 14px',
+                        background: 'none',
+                        border: 'none',
+                        borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+                        color: isActive ? '#2563EB' : '#64748B',
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: 12.5,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab Content Body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: 22 }}>
+                {/* 1. OVERVIEW */}
+                {activeSafetyTab === 'summary' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    {/* 4 Summary Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+                      {/* Card 1: Interlocking */}
+                      <div
+                        onClick={() => setActiveSafetyTab('interlocking')}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: 8,
+                          border: '1px solid #E2E8F0',
+                          borderLeft: '3px solid #D97706',
+                          padding: 12,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: 4 }}>
+                          Point Interlocking
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>
+                          {pointNumber} Clamped
+                        </div>
+                        <div style={{ fontSize: 11.5, color: '#64748B' }}>
+                          Padlock {padlockKeyId} in SM Safe
+                        </div>
+                      </div>
+
+                      {/* Card 2: 25kV Traction */}
+                      <div
+                        onClick={() => setActiveSafetyTab('catenary')}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: 8,
+                          border: '1px solid #E2E8F0',
+                          borderLeft: `3px solid ${isPowerTripped ? '#DC2626' : '#16A34A'}`,
+                          padding: 12,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: 4 }}>
+                          25kV Traction OHE
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>
+                          {isPowerTripped ? '0.00 kV Isolated' : 'Live (2.0m Buffer)'}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: '#64748B' }}>
+                          {isPowerTripped ? `${earthingRodsCount} earthing rods clamped` : 'Height limiters locked'}
+                        </div>
+                      </div>
+
+                      {/* Card 3: Traffic Block */}
+                      <div
+                        onClick={() => setActiveSafetyTab('traffic')}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: 8,
+                          border: '1px solid #E2E8F0',
+                          borderLeft: '3px solid #DC2626',
+                          padding: 12,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: 4 }}>
+                          Traffic Restriction
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>
+                          {isAbsoluteBlock ? 'Absolute Line Block' : 'Caution Order'}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: '#64748B' }}>
+                          TSR {tsrSpeed} km/h on {adjacentTrackName}
+                        </div>
+                      </div>
+
+                      {/* Card 4: Men & Machinery */}
+                      <div
+                        onClick={() => setActiveSafetyTab('machinery')}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: 8,
+                          border: '1px solid #E2E8F0',
+                          borderLeft: '3px solid #2563EB',
+                          padding: 12,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', marginBottom: 4 }}>
+                          Site Protection
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>
+                          {crewCount} Crew + {lookoutMenCount} Lookouts
+                        </div>
+                        <div style={{ fontSize: 11.5, color: '#64748B' }}>
+                          Clearance 4.26m verified
+                        </div>
+                      </div>
+                    </div>
+
+
+
+                    {/* Operational Protocols */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 12 }}>
+                      <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
+                          Safety &amp; Escalation Protocols
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: 16, color: '#475569', lineHeight: 1.5 }}>
+                          <li>Adjacent Substation Trip Code: <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>TRIP-SUB-DNR-99</span></li>
+                          <li>Station Master Magneto Phone: <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>HOTLINE-PNBE-01</span></li>
+                          <li>Continuous GPS geofence monitored on field app.</li>
+                        </ul>
+                      </div>
+
+                      <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
+                          Caution Order Directives
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: 16, color: '#475569', lineHeight: 1.5 }}>
+                          <li>Caution Order Memo: <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>{cautionOrderNo}</span></li>
+                          <li>Adjacent Track TSR: <strong>{tsrSpeed} km/h strictly enforced</strong></li>
+                          <li>Loco pilots instructed to sound horn continuously.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. POINT INTERLOCKING */}
+                {activeSafetyTab === 'interlocking' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                      Under <strong>G&amp;SR Rule 15.06</strong> and <strong>Station Working Rules 8.4</strong>, facing points leading towards the work track are mechanically clamped, padlocked, and the key is held in custody by the Station Master.
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, border: '1px solid #E2E8F0' }}>
+                      <thead>
+                        <tr style={{ background: '#F8FAFC', textAlign: 'left', borderBottom: '1px solid #CBD5E1', color: '#475569' }}>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Parameter</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Setting</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Status</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Authority</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Facing Point Isolation</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>{pointNumber} in Reverse Position</td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Locked</span></td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>SM Desk (Patna Jn)</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Clamp Serial Number</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', color: '#334155' }}>{clampSerial}</td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Verified</span></td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>Pointsman Desk</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Padlock Key Custody</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', color: '#334155' }}>{padlockKeyId}</td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>In Safe</span></td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>Station Master</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Electronic Interlocking (EI) Lock</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', color: '#334155' }}>{routeLockId}</td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Collar Active</span></td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>Section Controller</td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Catch Siding Alignment</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>Trap Point set towards Dead End</td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Secured</span></td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>Yard Master</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* 3. TRACTION POWER (25kV) */}
+                {activeSafetyTab === 'catenary' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                      Per <strong>ACTM Vol II Para 20615</strong>: {isPowerTripped ? 'A statutory 25kV Catenary Power Block (Form ETR-1) is active. The line has been de-energized, tested dead, and grounded with dual earthing discharge rods.' : 'The 25kV catenary remains energized. A 2.0-meter electrical safety buffer envelope is enforced for all personnel and machines.'}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Catenary Line Voltage</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: isPowerTripped ? '#DC2626' : '#16A34A', marginTop: 2 }}>
+                          {catenaryVoltage}
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Feeding Post Grid</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {feedingPost}
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Circuit Breaker Tag</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {breakerStatus}
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Earthing Discharge Rods</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {earthingRodsCount} Clamped (100m Up/Downstream)
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0', fontSize: 12 }}>
+                      <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
+                        Traction Power Controller (TPC) Protocol Checklist
+                      </div>
+                      <ol style={{ margin: 0, paddingLeft: 18, color: '#475569', lineHeight: 1.5 }}>
+                        <li>SCADA auto-reclosure interlock disabled on feeder breaker {breakerStatus}.</li>
+                        <li>Permit to Work (Form ETR-1) digitally signed by TPC Desk #01.</li>
+                        <li>Transverse track bonding continuity jumper confirmed (&lt; 0.1 Ω).</li>
+                        <li>Re-energization prohibited until SSE surrenders Form ETR-3 cancellation memo.</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. SPEED & MOVEMENT */}
+                {activeSafetyTab === 'traffic' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                      Under <strong>G&amp;SR Rule 15.09</strong>: Train traffic on {event.track_id.replace(/_/g, ' ')} is prohibited between KM {event.km_start.toFixed(3)} and KM {event.km_end.toFixed(3)}. Adjacent tracks operate under Caution Order T/409.
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0', fontSize: 12 }}>
+                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                          Traffic Block Mandates
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, color: '#334155' }}>
+                          <div>• Line Status: <strong>{isAbsoluteBlock ? 'Absolute Line Block' : 'Restricted Passage'}</strong></div>
+                          <div>• Train Register Book: <strong>{trbEntryNo}</strong></div>
+                          <div>• Block Direction: <strong>Both UP and DOWN approaches sealed</strong></div>
+                          <div>• Emergency Vehicle Corridor: <strong>Clear on loop siding #2</strong></div>
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0', fontSize: 12 }}>
+                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 6 }}>
+                          Speed Restrictions &amp; Caution Orders
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, color: '#334155' }}>
+                          <div>• Caution Order Number: <strong>{cautionOrderNo}</strong></div>
+                          <div>• Adjacent Track TSR: <strong>{tsrSpeed} km/h on {adjacentTrackName}</strong></div>
+                          <div>• Red Banner Flag Position: <strong>600 meters from site both ends</strong></div>
+                          <div>• Detonator Protection: <strong>3 fog signals at 1,200m (10m spacing)</strong></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. SITE SAFETY & CLEARANCE */}
+                {activeSafetyTab === 'machinery' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                      Per <strong>IRPWM Para 808</strong>: Machinery operated on track must maintain the approved Schedule of Dimensions (SOD) clearance profile under lookout protection.
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 }}>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Primary Machine Deployed</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {machineName}
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Fouling Mark Clearance</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#16A34A', marginTop: 2 }}>
+                          {foulingClearance}m from Track Center (Verified)
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Field Gang Strength</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {crewCount} Trackmen + 1 Supervisor
+                        </div>
+                      </div>
+                      <div style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, border: '1px solid #E2E8F0' }}>
+                        <div style={{ fontSize: 11, color: '#64748B' }}>Lookout Men Posted</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>
+                          {lookoutMenCount} Lookout Men with Whistles
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#FFFFFF', padding: 12, borderRadius: 6, border: '1px solid #E2E8F0', fontSize: 12 }}>
+                      <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
+                        PPE &amp; Equipment Safety Compliance
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, color: '#475569' }}>
+                        <div>• High-Visibility Class 3 Safety Vests</div>
+                        <div>• Steel-Toe P-Way Safety Boots</div>
+                        <div>• ISI Industrial Safety Helmets</div>
+                        <div>• First-Aid Trauma Kit &amp; Magneto Phone</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. STATUTORY APPROVALS */}
+                {activeSafetyTab === 'signatures' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>
+                      Under <strong>G&amp;SR 4.12</strong> and <strong>SWR 8.4</strong>, multi-officer dual-key authorizations with cryptographic hashes verify that all prerequisites are completed before track possession is permitted.
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, border: '1px solid #E2E8F0' }}>
+                      <thead>
+                        <tr style={{ background: '#F8FAFC', textAlign: 'left', borderBottom: '1px solid #CBD5E1', color: '#475569' }}>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Officer Role</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Designation</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Authority</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Cryptographic Hash</th>
+                          <th style={{ padding: '8px 10px', fontWeight: 600 }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Field Supervisor</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>{supervisorName}</td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>IRPWM Para 808</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#2563EB' }}>
+                            {event.stakeholders?.find(s => s.role === 'FIELD_SUPERVISOR')?.signature_hash || '5a2c81e997ed25519pwaypul885'}
+                          </td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Approved</span></td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Section Controller</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>Danapur Control (CTRL_SEC_DNR_02)</td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>G&amp;SR 4.12</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#2563EB' }}>
+                            {event.stakeholders?.find(s => s.role === 'SECTION_CONTROLLER')?.signature_hash || '6b3d81e997ed25519ctrlwda885'}
+                          </td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Approved</span></td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Station Master</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>Patna Junction (SM_PNBE_01)</td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>SWR 8.4</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#2563EB' }}>
+                            {event.stakeholders?.find(s => s.role === 'STATION_MASTER')?.signature_hash || '7c4e81e997ed25519smpul885'}
+                          </td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Approved</span></td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: '8px 10px', fontWeight: 500, color: '#0F172A' }}>Traction Power Controller</td>
+                          <td style={{ padding: '8px 10px', color: '#334155' }}>DDU Control Desk (TPC_DDU_01)</td>
+                          <td style={{ padding: '8px 10px', color: '#64748B' }}>ACTM Vol II</td>
+                          <td style={{ padding: '8px 10px', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#2563EB' }}>
+                            {event.stakeholders?.find(s => s.role === 'TPC')?.signature_hash || '8a1c81e997ed25519tpc884'}
+                          </td>
+                          <td style={{ padding: '8px 10px' }}><span style={{ padding: '2px 6px', borderRadius: 4, background: '#DCFCE7', color: '#166534', fontSize: 11, fontWeight: 600 }}>Approved</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div
+                style={{
+                  background: '#F8FAFC',
+                  borderTop: '1px solid #E2E8F0',
+                  padding: '12px 22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                }}
+              >
+                <div style={{ fontSize: 11.5, color: '#64748B' }}>
+                  Statutory Form 3-PTW certificate sealed under G&amp;SR Rule 15.06.
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowSafetyReportModal(false)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 6,
+                      border: '1px solid #CBD5E1',
+                      background: '#FFFFFF',
+                      color: '#475569',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '6px 14px',
+                      borderRadius: 6,
+                      border: 'none',
+                      background: '#2563EB',
+                      color: '#FFFFFF',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Printer size={13} /> Print Certificate
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
