@@ -12,7 +12,7 @@ interface TopHeaderProps {
   events: OperationalEvent[];
   selectedEvent: OperationalEvent | null;
   ambientNotifications: string[];
-  activeView: 'workspace' | 'audit' | 'overview' | 'chaos';
+  activeView: 'workspace' | 'audit' | 'overview' | 'chaos' | 'android_app';
   selectedSectionId: string;
   onSelectSection?: (secId: string) => void;
   onLogout?: () => void;
@@ -170,6 +170,28 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 }}
               >
                 Four Golden Signals &amp; TTR
+              </span>
+            </div>
+          )}
+
+          {activeView === 'android_app' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                Frontline Field Mobile App
+              </span>
+              <span style={{ color: '#CBD5E1', fontSize: 12 }}>/</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#065F46',
+                  background: '#ECFDF5',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  border: '1px solid #A7F3D0',
+                }}
+              >
+                Android Interface 2 • Site Supervisor
               </span>
             </div>
           )}

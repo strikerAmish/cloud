@@ -6,13 +6,14 @@ import { RightActionPane }   from './components/RightActionPane';
 import { AuditLedgerView }   from './components/AuditLedgerView';
 import { OverviewDashboard } from './components/OverviewDashboard';
 import { ChaosSreDashboard } from './components/ChaosSreDashboard';
+import { AndroidFieldApp }   from './components/AndroidFieldApp';
 import { LoginView }         from './components/LoginView';
 import { RequisitionModal }  from './components/RequisitionModal';
 import { fetchEvents, fetchHealth, getOrCreateTraceparent } from './api';
 import { OperationalEvent }  from './types';
 import { INITIAL_OPERATIONAL_EVENTS, eventMatchesSection } from './data/corridorData';
 
-export type View = 'workspace' | 'audit' | 'overview' | 'chaos';
+export type View = 'workspace' | 'audit' | 'overview' | 'chaos' | 'android_app';
 
 export function App() {
   const [isAuthenticated,   setIsAuthenticated]   = useState(false);
@@ -250,8 +251,17 @@ export function App() {
         )}
 
         {activeView === 'chaos' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: '#0F172A' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: '#F8FAFC' }}>
             <ChaosSreDashboard />
+          </div>
+        )}
+
+        {activeView === 'android_app' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', background: '#F8FAFC' }}>
+            <AndroidFieldApp
+              onEventCreated={loadEvents}
+              onNavigateToPortal={() => setActiveView('workspace')}
+            />
           </div>
         )}
       </div>

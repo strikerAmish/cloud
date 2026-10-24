@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  Train, LayoutDashboard, CheckSquare, ClockIcon, HelpCircle, ArrowRight, Flame
+  Train, LayoutDashboard, CheckSquare, ClockIcon, HelpCircle, ArrowRight, Flame, Smartphone
 } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
-  setActiveView: (v: 'workspace' | 'audit' | 'overview' | 'chaos') => void;
+  setActiveView: (v: 'workspace' | 'audit' | 'overview' | 'chaos' | 'android_app') => void;
   isOfflineMode: boolean;
   setIsOfflineMode: (v: boolean) => void;
   wsConnected: boolean;
@@ -13,10 +13,11 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { id: 'workspace',  label: 'Approval Portal',    icon: CheckSquare     },
-  { id: 'audit',      label: 'Audit & History',    icon: ClockIcon       },
-  { id: 'overview',   label: 'Corridor Overview',  icon: LayoutDashboard },
-  { id: 'chaos',      label: 'SRE & Chaos Suite',  icon: Flame           },
+  { id: 'workspace',   label: 'Approval Portal',    icon: CheckSquare     },
+  { id: 'android_app', label: 'Field Android App',  icon: Smartphone      },
+  { id: 'audit',       label: 'Audit & History',    icon: ClockIcon       },
+  { id: 'overview',    label: 'Corridor Overview',  icon: LayoutDashboard },
+  { id: 'chaos',       label: 'SRE & Chaos Suite',  icon: Flame           },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -92,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <button
                 key={id}
-                onClick={() => setActiveView(id as 'workspace' | 'audit' | 'overview' | 'chaos')}
+                onClick={() => setActiveView(id as 'workspace' | 'audit' | 'overview' | 'chaos' | 'android_app')}
                 className={`nav-item${isActive ? ' active' : ''}`}
                 style={{
                   position: 'relative',
